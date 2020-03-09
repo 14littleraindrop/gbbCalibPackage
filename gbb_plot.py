@@ -15,9 +15,10 @@ parser.add_argument('--dir', type=str, nargs=1,
 parser.add_argument('--var', type=str, nargs=1, help='The variable (ROOT leaf) to plot', required=True)
 parser.add_argument('--weight', type=str, nargs=1, help='The ROOT leaf name containing the weights to use',
         required=False)
+parser.add_argument('-f', type=float, nargs=1, help='mixing fraction, if plotting D', required=False)
 parser.add_argument('--xlabel', type=str, nargs=1, help='Histogram x-axis label', required=True)
 parser.add_argument('--ylabel', type=str, nargs=1, help='Histogram y-axis label', required=True)
-parser.add_argument('-f', type=float, nargs=1, help='mixing fraction, if plotting D', required=False)
+parser.add_argument('--title', type=str, nargs=1, help='Histogram title', required=True)
 
 args = parser.parse_args()
 directory = args.dir[0]
@@ -72,10 +73,10 @@ for name in os.listdir(directory):
     plt.hist(values, 300, weights=weights, histtype='step',
             stacked=True, fill=False, label=name.split('.')[3])
 plt.legend()
-plt.xlabel(args.xlabel)
-plt.ylabel(args.ylabel)
+plt.xlabel(args.xlabel[0])
+plt.ylabel(args.ylabel[0])
 plt.ticklabel_format(axis="x", style="sci", scilimits=(0,0))
 plt.yscale('log')
-plt.title('Large R jet pt distribution')
-plt.savefig("large_R_jet_pt.png") 
+plt.title(args.title[0])
+plt.savefig(args.title[0].replace(' ', '_') + '.png') 
 
