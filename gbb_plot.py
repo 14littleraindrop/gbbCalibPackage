@@ -1,5 +1,6 @@
 import argparse
 import os
+import numpy as np
 import sys
 import math 
 import matplotlib
@@ -16,6 +17,8 @@ parser.add_argument('--weight', type=str, nargs=1, help='The ROOT leaf name cont
         required=False)
 parser.add_argument('--xlabel', type=str, nargs=1, help='Histogram x-axis label', required=True)
 parser.add_argument('--ylabel', type=str, nargs=1, help='Histogram y-axis label', required=True)
+parser.add_argument('-f', type=float, nargs=1, help='mixing fraction, if plotting D', required=False)
+
 args = parser.parse_args()
 directory = args.dir[0]
 variable = args.var[0]
@@ -42,6 +45,16 @@ for name in os.listdir(directory):
                 # Get leaf value
                 if variable == 'fat_pt':
                     value = mychain.fat_pt
+                elif variable == 'D':
+                    # TODO: add option to plot new tagger values
+                    if args.f:
+                        f = args.f[0]
+                        pH = np.array(mychain.fat_XbbScoreHiggs)
+                        pTop = np.array(mychain.fat_XbbScoreTop)
+                        pQCD = np.array(mychain.fat_XbbScoreQCD)
+                        value = np.log(pH / ((1-f) * pQCD + f * pTop))
+                    else:
+                        raise ValueError('f is required for plotting D')
                 else:
                     raise ValueError('Unsupported variable name.')
 
@@ -52,10 +65,11 @@ for name in os.listdir(directory):
                         weight = mychain.eve_mc_w
 
                 for item in value:
-                    values.append(item)
-                    weights.append(weight)
+                    if not np.isnan(item):
+                        values.append(item)
+                        weights.append(weight)
 
-    plt.hist(values, 200, weights=weights, histtype='step', 
+    plt.hist(values, 300, weights=weights, histtype='step',
             stacked=True, fill=False, label=name.split('.')[3])
 plt.legend()
 plt.xlabel(args.xlabel)
