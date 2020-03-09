@@ -2,20 +2,31 @@ import argparse
 import os
 import sys
 import math 
-from ROOT import TFile
 import matplotlib
 matplotlib.use('pdf')
 matplotlib.rc('figure', figsize=(8, 5))
 import matplotlib.pyplot as plt
 
-parser = argparse.ArgumentParser(description='Plot fat_pt histogram for a directory of given input files.')
-parser.add_argument('directory', metavar='DIRECTORY', type=str, nargs=1, 
-        help='Directory of text files containing locations of ROOT files to process')
+parser = argparse.ArgumentParser(description='Plot a histogram of a variable given a directory of \
+        text files containing ROOT file paths to analyze.')
+parser.add_argument('--dir', type=str, nargs=1,
+        help='Directory of text files containing paths of ROOT files to process', required=True)
+parser.add_argument('--var', type=str, nargs=1, help='The variable (ROOT leaf) to plot', required=True)
+parser.add_argument('--weight', type=str, nargs=1, help='The ROOT leaf name containing the weights to use',
+        required=False)
+parser.add_argument('--xlabel', type=str, nargs=1, help='Histogram x-axis label', required=True)
+parser.add_argument('--ylabel', type=str, nargs=1, help='Histogram y-axis label', required=True)
 args = parser.parse_args()
-directory = args.directory[0]
+directory = args.dir[0]
+variable = args.var[0]
+weight_name = None
+if args.weight:
+    weight_name = args.weight[0]
 
+from ROOT import TFile
 for name in os.listdir(directory):
-    fat_pt_values = []
+    values = []
+    weights = []
     with open(os.path.join(directory, name), 'r') as f:
         for line in f.readlines():
             tfile = TFile(line.strip())
@@ -27,13 +38,28 @@ for name in os.listdir(directory):
                 nb = mychain.GetEntry(i)
                 if nb <= 0:
                     continue
-                fat_pt = mychain.fat_pt
-                [fat_pt_values.append(item) for item in fat_pt]
-    plt.hist(fat_pt_values, 200, histtype='step', stacked=True, fill=False, 
-            label=name.split('.')[3])
+
+                # Get leaf value
+                if variable == 'fat_pt':
+                    value = mychain.fat_pt
+                else:
+                    raise ValueError('Unsupported variable name.')
+
+                # Get weight value (if desired)
+                weight = 1
+                if weight_name is not None:
+                    if weight_name == 'eve_mc_w':
+                        weight = mychain.eve_mc_w
+
+                for item in value:
+                    values.append(item)
+                    weights.append(weight)
+
+    plt.hist(values, 200, weights=weights, histtype='step', 
+            stacked=True, fill=False, label=name.split('.')[3])
 plt.legend()
-plt.xlabel('pt (GeV)')
-plt.ylabel('jet count')
+plt.xlabel(args.xlabel)
+plt.ylabel(args.ylabel)
 plt.ticklabel_format(axis="x", style="sci", scilimits=(0,0))
 plt.yscale('log')
 plt.title('Large R jet pt distribution')
