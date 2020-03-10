@@ -13,8 +13,8 @@ parser = argparse.ArgumentParser(description='Plot a histogram of a variable giv
 parser.add_argument('--dir', type=str, nargs=1,
         help='Directory of text files containing paths of ROOT files to process', required=True)
 parser.add_argument('--var', type=str, nargs=1,
-        help='The variable (ROOT leaf) to plot. Supported: fat_pt, D, mass.', required=True)
-parser.add_argument('--weight', type=str, nargs=1, help='The ROOT leaf name containing the weights to use',
+        help='The variable (ROOT leaf) to plot. Supported: pt_ft, D, fat_mass, fat_eta, trkjet_MV2c10.', required=True)
+parser.add_argument('--weight', type=str, nargs=1, help='The ROOT leaf name containing the weights to use. Supported: eve_mv_w',
         required=False)
 parser.add_argument('-f', type=float, nargs=1, help='mixing fraction, if plotting D', required=False)
 parser.add_argument('--xlabel', type=str, nargs=1, help='Histogram x-axis label', required=True)
@@ -51,7 +51,7 @@ for name in os.listdir(directory):
                     continue
 
                 # Get leaf value
-                if variable == 'fat_pt':
+                if variable == 'pt_pt':
                     value = mychain.fat_pt
                 elif variable == 'D':
                     # TODO: add option to plot new tagger values
@@ -64,11 +64,15 @@ for name in os.listdir(directory):
                         value[np.isinf(value)] = np.nan
                     else:
                         raise ValueError('f is required for plotting D')
-                elif variable == 'mass':
+                elif variable == 'fat_mass':
                     value = [PtEtaPhiEVector(pt, eta, phi, e).mass()
                             for (pt, eta, phi, e) in list(zip(
                                 mychain.fat_pt, mychain.fat_eta,
                                 mychain.fat_phi, mychain.fat_E))]
+                elif variable == 'fat_eta':
+                    value = mychain.fat_eta
+                elif variable == 'trkjet_MV2c10':
+                    value = mychain.trkjet_MV2c10
                 else:
                     raise ValueError('Unsupported variable name.')
 
