@@ -36,6 +36,7 @@ all_weights = []
 for name in os.listdir(directory):
     values = []
     weights = []
+    print "Processing: %s " % (name)
     with open(os.path.join(directory, name), 'r') as f:
         for line in f.readlines():
             tfile = TFile(line.strip())
@@ -59,6 +60,7 @@ for name in os.listdir(directory):
                         pTop = np.array(mychain.fat_XbbScoreTop)
                         pQCD = np.array(mychain.fat_XbbScoreQCD)
                         value = np.log(pH / ((1-f) * pQCD + f * pTop))
+                        value[np.isinf(value)] = np.nan
                     else:
                         raise ValueError('f is required for plotting D')
                 elif variable == 'mass':
