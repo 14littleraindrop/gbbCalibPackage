@@ -12,7 +12,8 @@ parser = argparse.ArgumentParser(description='Plot a histogram of a variable giv
         text files containing ROOT file paths to analyze.')
 parser.add_argument('--dir', type=str, nargs=1,
         help='Directory of text files containing paths of ROOT files to process', required=True)
-parser.add_argument('--var', type=str, nargs=1, help='The variable (ROOT leaf) to plot', required=True)
+parser.add_argument('--var', type=str, nargs=1,
+        help='The variable (ROOT leaf) to plot. Supported: fat_pt, D, mass.', required=True)
 parser.add_argument('--weight', type=str, nargs=1, help='The ROOT leaf name containing the weights to use',
         required=False)
 parser.add_argument('-f', type=float, nargs=1, help='mixing fraction, if plotting D', required=False)
@@ -29,6 +30,9 @@ if args.weight:
 
 from ROOT import TFile
 from ROOT.Math import PtEtaPhiEVector
+
+all_values = []
+all_weights = []
 for name in os.listdir(directory):
     values = []
     weights = []
@@ -37,7 +41,7 @@ for name in os.listdir(directory):
             tfile = TFile(line.strip())
             mychain = tfile.Get('FlavourTagging_Nominal')
             entries = mychain.GetEntriesFast()
-            print "The number of entries is: ", entries
+            print "Collecting %s values: %d entries..." % (variable, entries)
 
             for i in range(entries):
                 nb = mychain.GetEntry(i)
@@ -76,8 +80,17 @@ for name in os.listdir(directory):
                         values.append(item)
                         weights.append(weight)
 
+    hist_label = name.split('.')[3]
+    print "Plotting %s set %s, with %d points" % (variable, hist_label, len(values))
     plt.hist(values, 300, weights=weights, histtype='step',
-            stacked=True, fill=False, label=name.split('.')[3])
+            stacked=True, fill=False, label=hist_label)
+    all_values.extend(values)
+    all_weights.extend(weights)
+
+print "Plotting combined dataset for %s..." % variable
+plt.hist(all_values, 300, weights=all_weights, histtype='step',
+        stacked=True, fill=False, label='All')
+
 plt.legend()
 plt.xlabel(args.xlabel[0])
 plt.ylabel(args.ylabel[0])
@@ -85,4 +98,4 @@ plt.ticklabel_format(axis="x", style="sci", scilimits=(0,0))
 plt.yscale('log')
 plt.title(args.title[0])
 plt.savefig(args.title[0].replace(' ', '_') + '.png') 
-
+print "Done!"
