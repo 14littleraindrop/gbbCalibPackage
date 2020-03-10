@@ -28,6 +28,7 @@ if args.weight:
     weight_name = args.weight[0]
 
 from ROOT import TFile
+from ROOT.Math import PtEtaPhiEVector
 for name in os.listdir(directory):
     values = []
     weights = []
@@ -56,6 +57,11 @@ for name in os.listdir(directory):
                         value = np.log(pH / ((1-f) * pQCD + f * pTop))
                     else:
                         raise ValueError('f is required for plotting D')
+                elif variable == 'mass':
+                    value = [PtEtaPhiEVector(pt, eta, phi, e).mass()
+                            for (pt, eta, phi, e) in list(zip(
+                                mychain.fat_pt, mychain.fat_eta,
+                                mychain.fat_phi, mychain.fat_E))]
                 else:
                     raise ValueError('Unsupported variable name.')
 
