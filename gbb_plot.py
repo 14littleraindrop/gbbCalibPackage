@@ -20,6 +20,7 @@ parser.add_argument('-f', type=float, nargs=1, help='mixing fraction, if plottin
 parser.add_argument('--xlabel', type=str, nargs=1, help='Histogram x-axis label', required=True)
 parser.add_argument('--ylabel', type=str, nargs=1, help='Histogram y-axis label', required=True)
 parser.add_argument('--title', type=str, nargs=1, help='Histogram title', required=True)
+parser.add_argument('--fname', type=str, nargs=1, help='File name', required=True)
 
 args = parser.parse_args()
 directory = args.dir[0]
@@ -99,5 +100,5 @@ plt.ylabel(args.ylabel[0])
 plt.ticklabel_format(axis="x", style="sci", scilimits=(0,0))
 plt.yscale('log')
 plt.title(args.title[0])
-plt.savefig(args.title[0].replace(' ', '_') + '.png') 
+plt.savefig(args.fname[0]+'.png') 
 print "Done!"
