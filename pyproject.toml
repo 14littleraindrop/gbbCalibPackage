@@ -1,8 +1,8 @@
 [tool.poetry]
-name = "gbb_plot"
+name = "gbb_calib"
 version = "0.1.0"
-description = ""
-authors = ["14littleraindrop <14littleraindrop@gmail.com>"]
+description = "gbb calibration package"
+authors = ["Helen Chen <14littleraindrop@gmail.com>"]
 
 [tool.poetry.dependencies]
 python = "^2.7"
