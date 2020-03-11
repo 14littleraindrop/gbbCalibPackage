@@ -13,7 +13,7 @@ parser = argparse.ArgumentParser(description='Plot a histogram of a variable giv
 parser.add_argument('--dir', type=str, nargs=1,
         help='Directory of text files containing paths of ROOT files to process', required=True)
 parser.add_argument('--var', type=str, nargs=1,
-        help='The variable (ROOT leaf) to plot. Supported: pt_ft, D, fat_mass, fat_eta, trkjet_MV2c10.', required=True)
+        help='The variable (ROOT leaf) to plot. Supported: fat_pt, D, fat_mass, fat_eta, trkjet_MV2c10.', required=True)
 parser.add_argument('--weight', type=str, nargs=1, help='The ROOT leaf name containing the weights to use. Supported: eve_mv_w',
         required=False)
 parser.add_argument('-f', type=float, nargs=1, help='mixing fraction, if plotting D', required=False)
@@ -51,7 +51,7 @@ for name in os.listdir(directory):
                     continue
 
                 # Get leaf value
-                if variable == 'pt_pt':
+                if variable == 'fat_pt':
                     value = mychain.fat_pt
                 elif variable == 'D':
                     # TODO: add option to plot new tagger values
