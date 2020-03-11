@@ -61,7 +61,6 @@ for name in os.listdir(directory):
                         pTop = np.array(mychain.fat_XbbScoreTop)
                         pQCD = np.array(mychain.fat_XbbScoreQCD)
                         value = np.log(pH / ((1-f) * pQCD + f * pTop))
-                        value[np.isinf(value)] = np.nan
                     else:
                         raise ValueError('f is required for plotting D')
                 elif variable == 'fat_mass':
@@ -83,7 +82,7 @@ for name in os.listdir(directory):
                         weight = mychain.eve_mc_w
 
                 for item in value:
-                    if not np.isnan(item):
+                    if not np.isnan(item) and not np.isinf(item):
                         values.append(item)
                         weights.append(weight)
 
