@@ -14,7 +14,7 @@ parser.add_argument('--dir', type=str, nargs=1,
         help='Directory of text files containing paths of ROOT files to process', required=True)
 parser.add_argument('--var', type=str, nargs=1,
         help='The variable (ROOT leaf) to plot. Supported: fat_pt, D, fat_mass, fat_eta, trkjet_MV2c10.', required=True)
-parser.add_argument('--weight', type=str, nargs=1, help='The ROOT leaf name containing the weights to use. Supported: eve_mv_w',
+parser.add_argument('--weight', type=str, nargs=1, help='The ROOT leaf name containing the weights to use. Supported: eve_mc_w',
         required=False)
 parser.add_argument('-f', type=float, nargs=1, help='mixing fraction, if plotting D', required=False)
 parser.add_argument('--xlabel', type=str, nargs=1, help='Histogram x-axis label', required=True)
@@ -80,6 +80,8 @@ for name in os.listdir(directory):
                 if weight_name is not None:
                     if weight_name == 'eve_mc_w':
                         weight = mychain.eve_mc_w
+                    else:
+                        raise ValueError('Unsupported weight type.')
 
                 for item in value:
                     if not np.isnan(item) and not np.isinf(item):
