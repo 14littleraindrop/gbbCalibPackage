@@ -76,10 +76,10 @@ for name in os.listdir(directory):
                     raise ValueError('Unsupported variable name.')
 
                 # Get weight value (if desired)
-                weight = 1
+                weight = mychain.eve_mc_w * mychain.eve_pu_w
                 if weight_name is not None:
-                    if weight_name == 'eve_mc_w':
-                        weight = mychain.eve_mc_w
+                    if weight_name == 'eve_pu_w_sys':
+                        weight = mychain.eve_pu_w_sys
                     else:
                         raise ValueError('Unsupported weight type.')
 
