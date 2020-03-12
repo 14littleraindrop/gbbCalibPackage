@@ -6,8 +6,10 @@ authors = ["Helen Chen <14littleraindrop@gmail.com>"]
 
 [tool.poetry.dependencies]
 python = "^2.7"
-numpy = "1.16.6"
-matplotlib = "2.2"
+numpy = "^1.16.6"
+matplotlib = "^2.2.5"
+# Needed for matplotlib to import correctly
+backports-functools_lru_cache = "^1.6.1"
 
 [tool.poetry.dev-dependencies]
 pytest = "^4.6"
