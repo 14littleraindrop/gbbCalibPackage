@@ -30,7 +30,7 @@ from ROOT import TFile
 from ROOT.Math import PtEtaPhiEVector
 
 for name in os.listdir(directory):
-    print 'Processing: %s ' % (name)
+    print 'Processing: %s... ' % (name)
     bin_width = (args.range[1] - args. range[0]) / args.bin[0]
     hist = {}
     for i in range (0, args.bin[0]):
@@ -47,7 +47,7 @@ for name in os.listdir(directory):
             tfile = TFile(line.strip())
             mychain = tfile.Get('FlavourTagging_Nominal')
             entries = mychain.GetEntriesFast()
-            print "Collecting %s vakues: %d entries..." % (variable, entries)
+            print 'Collecting %s values: %d entries...' % (variable, entries)
 
             # Get leaf value
             for i in range(entries):
@@ -67,3 +67,5 @@ for name in os.listdir(directory):
 
     # Add on slice-wise weight
     hist.update((x, y * xsec * filterEff / sum_of_w) for x, y in hist.items())
+    # TODO: Save histogram
+    print 'Histogram for %s has been created.' % (name)
