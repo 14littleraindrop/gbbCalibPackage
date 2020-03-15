@@ -29,9 +29,12 @@ trigger = config['trigger']
 from ROOT import TFile
 from ROOT.Math import PtEtaPhiEVector
 
+hist_all = {}
+bin_width = (args.range[1] - args. range[0]) / args.bin[0]
+for i in range (0, args.bin[0]):
+    hist_all[(i + 1) * bin_width] = 0
 for name in os.listdir(directory):
     print 'Processing: %s... ' % (name)
-    bin_width = (args.range[1] - args. range[0]) / args.bin[0]
     hist = {}
     for i in range (0, args.bin[0]):
         hist[(i + 1) * bin_width] = 0.
@@ -67,5 +70,10 @@ for name in os.listdir(directory):
 
     # Add on slice-wise weight
     hist.update((x, y * xsec * filterEff / sum_of_w) for x, y in hist.items())
+    for key in hist.keys():
+        hist_all[key] = hist_all[key] + hist[key]
     # TODO: Save histogram
     print 'Histogram for %s has been created.' % (name)
+
+print 'Combined histogram has been created.'
+print 'Done!'
