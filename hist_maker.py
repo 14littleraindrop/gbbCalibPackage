@@ -21,6 +21,7 @@ parser.add_argument('--var', type=str, nargs=1,
 parser.add_argument('--range', type=float, nargs=2, help='Histogram range. 1st arg = min, 2nd arg = max', required=True)
 parser.add_argument('--bin', type=int, nargs=1, help='Number of bins', required=True)
 parser.add_argument('--config', type=str, nargs=1, help='Config file to use (JSON)', default='hist_maker.json')
+parser.add_argument('--output', type=str, nargs=1, help='Name of output directory', required=True)
 
 args = parser.parse_args()
 directory = args.dir[0]
@@ -29,6 +30,7 @@ with open(args.config[0]) as f:
     config = json.load(f)
 weight = config['weight']
 trigger = config['trigger']
+os.mkdir(args.output[0])
 
 from ROOT import TFile
 from ROOT.Math import PtEtaPhiEVector
@@ -40,62 +42,56 @@ def trigger():
     mychain.fat_pt >= trigger['fat_pt']
 ###################
 
-with open(directory+'.pickle', 'wb') as output:
-    hist_all = {}
-    bin_width = (args.range[1] - args. range[0]) / args.bin[0]
-    for i in range (0, args.bin[0]):
-        hist_all[(i + 1) * bin_width] = 0
-    for name in os.listdir(directory):
-        print 'Processing: %s... ' % (name)
-        hist = {}
-        for i in range (0, args.bin[0]):
-            hist[(i + 1) * bin_width] = 0.
+hist_all = Histogram('combined')
+hist_all.setup_bins(args.range[0], args.range[1], args.bin[0])
 
-        # Get weighting info for the slice
-        sum_of_w = 0
-        xsec = weight[name.split('.')[3]]['xsec']
-        filterEff = weight[name.split('.')[3]]['filterEff']
+for name in os.listdir(directory):
+    print 'Processing: %s... ' % (name)
+    hist = Histogram(name.split('.')[3])
+    hist.setup_bins(args.range[0], args.range[1], args.bin[0])
 
-        # Loop over root files in one mc slice
-        with open(os.path.join(directory, name), 'r') as f:
-            for line in f.readlines():
-                tfile = TFile(line.strip())
-                mychain = tfile.Get('FlavourTagging_Nominal')
-                entries = mychain.GetEntriesFast()
-                print 'Collecting %s values: %d entries...' % (variable, entries)
+    # Get weighting info for the slice
+    sum_of_w = 0
+    xsec = weight[name.split('.')[3]]['xsec']
+    filterEff = weight[name.split('.')[3]]['filterEff']
 
-                # Get leaf value
-                for i in range(entries):
-                    nb = mychain.GetEntry(i)
-                    if nb <= 0:
-                        continue
+    # Loop over root files in one mc slice
+    with open(os.path.join(directory, name), 'r') as f:
+        for line in f.readlines():
+            tfile = TFile(line.strip())
+            mychain = tfile.Get('FlavourTagging_Nominal')
+            entries = mychain.GetEntriesFast()
+            print 'Collecting %s values: %d entries...' % (variable, entries)
 
-                    # TODO: Check trigger value
-                    #################
-                    if mychain.trigger['eve_HLT']['variable'] != 1:
-                        continue
-                    if mychain.trigger['leading_fat_pt']:
-                        pass
-                    #################
+            # Get leaf value
+            for i in range(entries):
+                nb = mychain.GetEntry(i)
+                if nb <= 0:
+                    continue
 
-                    if variable == 'fat_pt':
-                        value = mychain.fat_pt
-                    else:
-                        raise ValueError('Unsupported variable name.')
-                    mc_eve_w = mychain.eve_mc_w * mychain.eve_pu_w
-                    sum_of_w = sum_of_w + mc_eve_w
-                    for item in value:
-                        if not np.isnan(item) and not np.isinf(item):
-                            selected_bin = min([ x - item for x in hist.keys()], key=abs) + item
-                            hist[selected_bin] = hist[selected_bin] + (1 * mc_eve_w)
+                # TODO: Check trigger value
+                '''
+                if mychain.trigger['eve_HLT']['variable'] != 1:
+                    continue
+                if mychain.trigger['leading_fat_pt']:
+                    pass
+                '''
 
-        # Add on slice-wise weight
-        hist.update((x, y * xsec * filterEff / sum_of_w) for x, y in hist.items())
-        for key in hist.keys():
-            hist_all[key] = hist_all[key] + hist[key]
-        # TODO: rename hist before dumpping
-        pickle.dump(hist, output, protocol = pickle.HIGHEST_PROTOCOL)
-        print 'Histogram for %s has been created.' % (name)
-    pickle.dump(hist_all, output, protocol = pickle.HIGHEST_PROTOCOL)
-    print 'Combined histogram has been created.'
-    print 'Done!'
+                if variable == 'fat_pt':
+                    value = mychain.fat_pt
+                else:
+                    raise ValueError('Unsupported variable name.')
+                mc_eve_w = mychain.eve_mc_w * mychain.eve_pu_w
+                sum_of_w = sum_of_w + mc_eve_w
+                for item in value:
+                    if not np.isnan(item) and not np.isinf(item):
+                        hist.add_point(item, mc_eve_w)
+
+    # Add on slice-wise weight
+    hist.rescale(xsec * filterEff / sum_of_w)
+    hist.pickle(args.output[0])
+    hist_all.combine(hist)
+    print 'Histogram for %s has been created.' % (name)
+hist_all.pickle(args.output[0])
+print 'Combined histogram has been created.'
+print 'Done!'

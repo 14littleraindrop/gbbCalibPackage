@@ -1,5 +1,5 @@
-{
 
+{
     "weight": {
         "361020" : {"xsce" : 78420000.0, "filterEff" : 0.9755},
         "361021" : {"xsec" : 78420000.0, "filterEff" : 0.00067152},
@@ -16,11 +16,10 @@
         "361032" : {"xsec" : 1.0367e-09, "filterEff" : 0.00042592}
     },
     "trigger":{
-        "fat_eta" : [500, float('inf')],
-        "leading_fat_pt" : [float('-inf'), 2],
-        "number_of_subjet" : [2, float('inf')],
+        "fat_eta" : [],
+        "leading_fat_pt" : [],
+        "number_of_subjet" : [],
         "fat_mass" : [75, 145],
         "eve_HLT" : {"variable" : "eve_HLT_j460_a10_lcw_subjes_L1J100", "trigger_value" : 1}
-
     }
 }
