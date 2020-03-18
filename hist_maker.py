@@ -17,7 +17,9 @@ parser = argparse.ArgumentParser(description='Make histogram of a variable given
 parser.add_argument('--dir', type=str, nargs=1,
         help='Directory of text files containing paths of ROOT files to process', required=True)
 parser.add_argument('--var', type=str, nargs=1, 
-        help='The variable (ROOT leaf) to make histogram. Supported: ????', required=True)
+        help='The variable (ROOT leaf) to make histogram. Supported: fat_pt, fat_mass, fat_eta, \
+                trkjet_MV2c10, D', required=True)
+parser.add_argument('-f', type=float, nargs=1, help='mixing fraction, if plotting D')
 parser.add_argument('--range', type=float, nargs=2, help='Histogram range. 1st arg = min, 2nd arg = max', required=True)
 parser.add_argument('--bin', type=int, nargs=1, help='Number of bins', required=True)
 parser.add_argument('--config', type=str, nargs=1, help='Config file to use (JSON)', default='hist_maker.json')
@@ -79,6 +81,24 @@ for name in os.listdir(directory):
 
                 if variable == 'fat_pt':
                     value = mychain.fat_pt
+                elif variable == 'fat_mass':
+                    value = [PtEtaPhiEVector(pt, eta, phi, e).mass()
+                            for (pt, eta, phi, e) in list(zip(
+                                mychain.fat_pt, mychain.fat_eta,
+                                mychain.fat_phi, mychain.fat_E))]
+                elif variable == 'fat_eta':
+                    value = mychain.fat_eta
+                elif variable == 'trkjet_MV2c10':
+                    value = mychain.trkjet_MV2c10
+                elif variable == 'D':
+                    if args.f:
+                        f = args.f[0]
+                        pH = np.array(mychain.fat_XbbScoreHiggs)
+                        pTop = np.array(mychain.fat_XbbScoreTop)
+                        pQCD = np.array(mychain.fat_XbbScoerQCD)
+                        value = np.log(pH / ((1-f) * pQCD + f * pTop))
+                    else:
+                        raise ValueError('f is required for plotting D')
                 else:
                     raise ValueError('Unsupported variable name.')
                 mc_eve_w = mychain.eve_mc_w * mychain.eve_pu_w
