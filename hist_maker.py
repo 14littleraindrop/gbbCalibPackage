@@ -20,11 +20,12 @@ parser.add_argument('--var', type=str, nargs=1,
         help='The variable (ROOT leaf) to make histogram. Supported: ????', required=True)
 parser.add_argument('--range', type=float, nargs=2, help='Histogram range. 1st arg = min, 2nd arg = max', required=True)
 parser.add_argument('--bin', type=int, nargs=1, help='Number of bins', required=True)
+parser.add_argument('--config', type=str, nargs=1, help='Config file to use (JSON)', default='hist_maker.json')
 
 args = parser.parse_args()
 directory = args.dir[0]
 variable = args.var[0]
-with open('histMacker.json') as f:
+with open(args.config[0]) as f:
     config = json.load(f)
 weight = config['weight']
 trigger = config['trigger']
@@ -34,9 +35,8 @@ from ROOT.Math import PtEtaPhiEVector
 
 ###################
 def trigger():
-    # Check fatjet_eta
+    # Check fatjet_eta, leading_fatjet_pt
     all(trigger['fat_eta'][0] <= x <= trigger['fat_eta'][1] for x in mychain.fat_eta) and \
-    # Check leading_fatjet_pt
     mychain.fat_pt >= trigger['fat_pt']
 ###################
 
@@ -70,11 +70,12 @@ with open(directory+'.pickle', 'wb') as output:
                     if nb <= 0:
                         continue
 
-                    # Chekc trigger value
+                    # TODO: Check trigger value
                     #################
                     if mychain.trigger['eve_HLT']['variable'] != 1:
                         continue
-                    if mychain.trigger['leading_fat_pt']
+                    if mychain.trigger['leading_fat_pt']:
+                        pass
                     #################
 
                     if variable == 'fat_pt':
