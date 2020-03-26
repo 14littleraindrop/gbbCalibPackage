@@ -8,6 +8,8 @@ matplotlib.use('pdf')
 matplotlib.rc('figure', figsize=(8, 5))
 import matplotlib.pyplot as plt
 
+from plot_utils import add_plot_options
+
 parser = argparse.ArgumentParser(description='Plot a histogram of a variable given a directory of \
         text files containing ROOT file paths to analyze.')
 parser.add_argument('--dir', type=str, nargs=1,
@@ -17,10 +19,7 @@ parser.add_argument('--var', type=str, nargs=1,
 parser.add_argument('--weight', type=str, nargs=1, help='The ROOT leaf name containing the weights to use. Supported: eve_mc_w',
         required=False)
 parser.add_argument('-f', type=float, nargs=1, help='mixing fraction, if plotting D', required=False)
-parser.add_argument('--xlabel', type=str, nargs=1, help='Histogram x-axis label', required=True)
-parser.add_argument('--ylabel', type=str, nargs=1, help='Histogram y-axis label', required=True)
-parser.add_argument('--title', type=str, nargs=1, help='Histogram title', required=True)
-parser.add_argument('--fname', type=str, nargs=1, help='File name', required=True)
+add_plot_options(parser)
 
 args = parser.parse_args()
 directory = args.dir[0]
