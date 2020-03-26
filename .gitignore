@@ -141,3 +141,4 @@ dmypy.json
 input_files*
 sample/
 **/*.png
+hist_output*
