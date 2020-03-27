@@ -25,7 +25,7 @@ for name in os.listdir(directory):
     print 'Processing: %s...' % (name)
     with open(os.path.join(directory, name), 'rb') as f:
         hist = pickle.load(f)
-    plt.plot(hist.bins(), hist.frequencies(), 'x', label=name)
+    plt.plot(hist.bins(), hist.frequencies(), '+', label=name)
 
 plt.legend()
 plt.xlabel(args.xlabel[0])
