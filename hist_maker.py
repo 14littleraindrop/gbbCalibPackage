@@ -18,20 +18,18 @@ parser.add_argument('--dir', type=str, nargs=1,
         help='Directory of text files containing paths of ROOT files to process', required=True)
 parser.add_argument('--var', type=str, nargs=1, 
         help='The variable (ROOT leaf) to make histogram. Supported: fat_pt, fat_mass, fat_eta, \
-                trkjet_MV2c10, D', required=True)
+                trkjet_MV2c10, D', required=False)
 parser.add_argument('-f', type=float, nargs=1, help='mixing fraction, if plotting D')
-parser.add_argument('--range', type=float, nargs=2, help='Histogram range. 1st arg = min, 2nd arg = max', required=True)
-parser.add_argument('--bin', type=int, nargs=1, help='Number of bins', required=True)
 parser.add_argument('--config', type=str, nargs=1, help='Config file to use (JSON)', default='hist_maker.json')
 parser.add_argument('--output', type=str, nargs=1, help='Name of output directory', required=True)
 
 args = parser.parse_args()
 directory = args.dir[0]
-variable = args.var[0]
 with open(args.config[0]) as f:
     config = json.load(f)
 weight = config['weight']
 trigger = config['trigger']
+variables = config['variables']
 os.mkdir(args.output[0])
 
 from ROOT import TFile
@@ -44,13 +42,21 @@ def trigger():
     mychain.fat_pt >= trigger['fat_pt']
 ###################
 
-hist_all = Histogram('combined')
-hist_all.setup_bins(args.range[0], args.range[1], args.bin[0])
+
+# Declare combined histograms for all provided variables
+combined_hist = { var : Histogram('combined_' + var) for var in variables.keys()}
+for var in variables.keys():
+    combined_hist[var].setup_bins(variables[var]['min'], variables[var]['max'], variables[var]['bin'])
+
+# Create directories to hold pickled histograms for each variables
+for var in variables.keys():
+    os.mkdir(args.output[0] + '/' + var)
 
 for name in os.listdir(directory):
     print 'Processing: %s... ' % (name)
-    hist = Histogram(name.split('.')[3])
-    hist.setup_bins(args.range[0], args.range[1], args.bin[0])
+    hist = {var : Histogram(name.split('.')[3] + '_' + var) for var in variables.keys()}
+    for var in variables.keys():
+        hist[var].setup_bins(variables[var]['min'], variables[var]['max'], variables[var]['bin'])
 
     # Get weighting info for the slice
     sum_of_w = 0
@@ -63,7 +69,7 @@ for name in os.listdir(directory):
             tfile = TFile(line.strip())
             mychain = tfile.Get('FlavourTagging_Nominal')
             entries = mychain.GetEntriesFast()
-            print 'Collecting %s values: %d entries...' % (variable, entries)
+            print 'Collecting entries: %d entries...' % (entries)
 
             # Get leaf value
             for i in range(entries):
@@ -78,40 +84,43 @@ for name in os.listdir(directory):
                 if mychain.trigger['leading_fat_pt']:
                     pass
                 '''
-
-                if variable == 'fat_pt':
-                    value = mychain.fat_pt
-                elif variable == 'fat_mass':
-                    value = [PtEtaPhiEVector(pt, eta, phi, e).mass()
-                            for (pt, eta, phi, e) in list(zip(
-                                mychain.fat_pt, mychain.fat_eta,
-                                mychain.fat_phi, mychain.fat_E))]
-                elif variable == 'fat_eta':
-                    value = mychain.fat_eta
-                elif variable == 'trkjet_MV2c10':
-                    value = mychain.trkjet_MV2c10
-                elif variable == 'D':
-                    if args.f:
-                        f = args.f[0]
-                        pH = np.array(mychain.fat_XbbScoreHiggs)
-                        pTop = np.array(mychain.fat_XbbScoreTop)
-                        pQCD = np.array(mychain.fat_XbbScoerQCD)
-                        value = np.log(pH / ((1-f) * pQCD + f * pTop))
+                values = {var : 0 for var in variables.keys()}
+                for var in variables.keys():
+                    if var == 'fat_pt':
+                        values[var] = mychain.fat_pt
+                    elif var == 'fat_mass':
+                        values[var] = [PtEtaPhiEVector(pt, eta, phi, e).mass()
+                                for (pt, eta, phi, e) in list(zip(
+                                    mychain.fat_pt, mychain.fat_eta,
+                                    mychain.fat_phi, mychain.fat_E))]
+                    elif var == 'fat_eta':
+                        values[var] = mychain.fat_eta
+                    elif var == 'trkjet_MV2c10':
+                        values[var] = mychain.trkjet_MV2c10
+                    elif var == 'D':
+                        if args.f:
+                            f = args.f[0]
+                            pH = np.array(mychain.fat_XbbScoreHiggs)
+                            pTop = np.array(mychain.fat_XbbScoreTop)
+                            pQCD = np.array(mychain.fat_XbbScoerQCD)
+                            values[var] = np.log(pH / ((1-f) * pQCD + f * pTop))
+                        else:
+                            raise ValueError('f is required for plotting D')
                     else:
-                        raise ValueError('f is required for plotting D')
-                else:
-                    raise ValueError('Unsupported variable name.')
+                        raise ValueError('Unsupported variable name.')
                 mc_eve_w = mychain.eve_mc_w * mychain.eve_pu_w
                 sum_of_w = sum_of_w + mc_eve_w
-                for item in value:
-                    if not np.isnan(item) and not np.isinf(item):
-                        hist.add_point(item, mc_eve_w)
+                for var in variables.keys():
+                    for item in values[var]:
+                        if not np.isnan(item) and not np.isinf(item):
+                            hist[var].add_point(item, mc_eve_w)
 
     # Add on slice-wise weight
-    hist.rescale(xsec * filterEff / sum_of_w)
-    hist.pickle(args.output[0])
-    hist_all.combine(hist)
+    for var in variables.keys():
+        hist[var].rescale(xsec * filterEff / sum_of_w)
+        hist[var].pickle(args.output[0] + '/' + var)
+        combined_hist[var].combine(hist[var])
     print 'Histogram for %s has been created.' % (name)
-hist_all.pickle(args.output[0])
+[combined_hist[var].pickle(args.output[0] + '/' + var) for var in variables.keys()]
 print 'Combined histogram has been created.'
 print 'Done!'

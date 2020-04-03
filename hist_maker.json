@@ -21,5 +21,9 @@
         "number_of_subjet" : [],
         "fat_mass" : [75, 145],
         "eve_HLT" : {"variable" : "eve_HLT_j460_a10_lcw_subjes_L1J100", "trigger_value" : 1}
+    },
+    "variables":{
+        "fat_pt" : {"min" : 0, "max" : 2500000, "bin" : 100},
+        "fat_eta" : {"min" : 0, "max" : 6000000, "bin" : 100}
     }
 }
