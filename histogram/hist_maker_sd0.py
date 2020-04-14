@@ -57,7 +57,7 @@ hists = {
 # Muon selection: Return a list with 1st entry = muon trkjet index, 2nd entry = non-muon trkjet index
 
 def fjFiltter():
-    fjs = []
+    fat_jets = []
     for fj in mychain.fat_assocTrkjet_ind:
         mjinds = []
         fjinds = []
@@ -74,10 +74,33 @@ def fjFiltter():
             fjinds.append(fj[1])
         else:
             fjinds.append(fj[0])
-        fjs.append(fjinds)
-    return fjs
+        fat_jets.append(fjinds)
+    return fat_jets
                 
 # Define functions which return jet labels
+
+def GetPt(fjs):
+    pt_labels = []
+    for fj in fjs:
+        pt_label = []
+        # Get muon jet pt label
+        muon_pt = mychain.trkjet_pt[fj[0]]/1000
+        if muon_pt <= mjpt[0]:
+            pt_label.append('l' + str(mjpt[0]))
+        elif muon_pt <= mjpt[1]:
+            pt_label.append('g' + str(mjpt[0]) + 'l' + str(mjpt[1]))
+        else:
+            pt_label.append('g' + str(mjpt[1]))
+        # Get non-muon jet pt label
+        nmuon_pt = mychain.trkjet_pt[fj[1]]/1000
+        if nmuon_pt <= nmjpt[0]:
+            pt_label.append('l' + str(nmjpt[0]))
+        elif nmuon_pt <= nmjpt[1]:
+            pt_label.append('g' + str(nmjpt[0]) + 'l' + str(nmjpt[1]))
+        else:
+            pt_label.append('g' + str(nmjpt[1]))
+        pt_labels.append(pt_label)
+    return pt_labels
 
 
 # Declare combined histograms for all provided variables
@@ -116,6 +139,7 @@ for name in os.listdir(directory):
                 print 'trkjet_assocMuon_n ='
                 print mychain.trkjet_assocMuon_n
                 print fjFiltter()
+                print GetPt(fjFiltter())
                 print mychain.fat_assocTrkjet_ind.size()
                 print 'trkjet_pt ='
                 print mychain.trkjet_pt
