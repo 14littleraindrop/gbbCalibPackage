@@ -24,6 +24,12 @@
     },
     "variables":{
         "fat_pt" : {"min" : 0, "max" : 2500000, "bin" : 100},
-        "fat_eta" : {"min" : 0, "max" : 6000000, "bin" : 100}
-    }
+        "fat_eta" : {"min" : 0, "max" : 6000000, "bin" : 100},
+        "meanSd0" : {"min" : -40, "max" : 80, "bin" : 100}
+    },
+    "pt_bins":{
+        "mjet" : [200, 300],
+        "nmjet" : [100, 200]
+    },
+    "flavors": ["BB", "BL", "CC", "CL", "LL"]
 }
