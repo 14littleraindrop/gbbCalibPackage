@@ -77,31 +77,41 @@ def fjFiltter():
         fat_jets.append(fjinds)
     return fat_jets
                 
-# Define functions which return jet labels
+# Define functions which return fat jet labels
 
-def GetPt(fjs):
-    pt_labels = []
-    for fj in fjs:
-        pt_label = []
-        # Get muon jet pt label
-        muon_pt = mychain.trkjet_pt[fj[0]]/1000
-        if muon_pt <= mjpt[0]:
-            pt_label.append('l' + str(mjpt[0]))
-        elif muon_pt <= mjpt[1]:
-            pt_label.append('g' + str(mjpt[0]) + 'l' + str(mjpt[1]))
-        else:
-            pt_label.append('g' + str(mjpt[1]))
-        # Get non-muon jet pt label
-        nmuon_pt = mychain.trkjet_pt[fj[1]]/1000
-        if nmuon_pt <= nmjpt[0]:
-            pt_label.append('l' + str(nmjpt[0]))
-        elif nmuon_pt <= nmjpt[1]:
-            pt_label.append('g' + str(nmjpt[0]) + 'l' + str(nmjpt[1]))
-        else:
-            pt_label.append('g' + str(nmjpt[1]))
-        pt_labels.append(pt_label)
-    return pt_labels
+def GetPt(fj):
+    pt_label = []
+    # Get muon jet pt label
+    muon_pt = mychain.trkjet_pt[fj[0]]/1000
+    if muon_pt <= mjpt[0]:
+        pt_label.append('l' + str(mjpt[0]))
+    elif muon_pt <= mjpt[1]:
+        pt_label.append('g' + str(mjpt[0]) + 'l' + str(mjpt[1]))
+    else:
+        pt_label.append('g' + str(mjpt[1]))
+    # Get non-muon jet pt label
+    nmuon_pt = mychain.trkjet_pt[fj[1]]/1000
+    if nmuon_pt <= nmjpt[0]:
+        pt_label.append('l' + str(nmjpt[0]))
+    elif nmuon_pt <= nmjpt[1]:
+        pt_label.append('g' + str(nmjpt[0]) + 'l' + str(nmjpt[1]))
+    else:
+        pt_label.append('g' + str(nmjpt[1]))
+    return pt_label
 
+def GetFlavor(fj):
+    flavors = []
+    # Get jet flavors
+    for i in fj:
+        if mychain.trkjet_BHad_n[i] >= 1:
+            flavors.append('B')
+        elif mychain.trkjet_CHad_n[i] >= 1:
+            flavors.append('C')
+        else:
+            flavors.append('L')
+    print flavors
+    flavors.sort()
+    return ''.join(flavors)
 
 # Declare combined histograms for all provided variables
 combined_hist = { var : Histogram('combined_' + var) for var in variables.keys()}
@@ -139,7 +149,13 @@ for name in os.listdir(directory):
                 print 'trkjet_assocMuon_n ='
                 print mychain.trkjet_assocMuon_n
                 print fjFiltter()
-                print GetPt(fjFiltter())
+                for fj in fjFiltter():
+                    print mychain.trkjet_BHad_n[fj[0]]
+                    print mychain.trkjet_CHad_n[fj[0]]
+                    print mychain.trkjet_BHad_n[fj[1]]
+                    print mychain.trkjet_CHad_n[fj[1]]
+                    print GetFlavor(fj)
+                    print GetPt(fj)
                 print mychain.fat_assocTrkjet_ind.size()
                 print 'trkjet_pt ='
                 print mychain.trkjet_pt
