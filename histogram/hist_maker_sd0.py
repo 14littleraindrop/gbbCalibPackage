@@ -56,7 +56,7 @@ hists = {
 
 # Muon selection: Return a list with 1st entry = muon trkjet index, 2nd entry = non-muon trkjet index
 
-def fjFiltter():
+def fjFilter():
     fat_jets = []
     for fj in mychain.fat_assocTrkjet_ind:
         mjinds = []
@@ -113,6 +113,9 @@ def GetFlavor(fj):
     flavors.sort()
     return ''.join(flavors)
 
+# Define function for Xbb tagging
+
+
 # Declare combined histograms for all provided variables
 combined_hist = { var : Histogram('combined_' + var) for var in variables.keys()}
 for var in variables.keys():
@@ -148,12 +151,8 @@ for name in os.listdir(directory):
                 print mychain.fat_assocTrkjet_ind
                 print 'trkjet_assocMuon_n ='
                 print mychain.trkjet_assocMuon_n
-                print fjFiltter()
-                for fj in fjFiltter():
-                    print mychain.trkjet_BHad_n[fj[0]]
-                    print mychain.trkjet_CHad_n[fj[0]]
-                    print mychain.trkjet_BHad_n[fj[1]]
-                    print mychain.trkjet_CHad_n[fj[1]]
+                print fjFilter()
+                for fj in fjFilter():
                     print GetFlavor(fj)
                     print GetPt(fj)
                 print mychain.fat_assocTrkjet_ind.size()
