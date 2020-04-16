@@ -37,5 +37,5 @@
         "nmjet" : [100, 200]
     },
     "flavors": ["BB", "BL", "CC", "CL", "LL"],
-    "topFrac": 0.
+    "XbbTagger": {"WP": 50, "topFrac" : 0.0, "cut" : 4.03} 
 }

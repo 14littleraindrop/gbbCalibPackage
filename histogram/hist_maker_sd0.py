@@ -30,6 +30,7 @@ variables = config['variables']
 mjpt = config['pt_bins']['mjet']
 nmjpt = config['pt_bins']['nmjet']
 flavors = config['flavors']
+xbbtagger = config['XbbTagger']
 os.mkdir(args.output[0])
 
 from ROOT import TFile
@@ -55,30 +56,33 @@ hists = {
         }
 
 # Muon selection: Return a list with 1st entry = muon trkjet index, 2nd entry = non-muon trkjet index
-
 def fjFilter():
     fat_jets = []
     for fj in mychain.fat_assocTrkjet_ind:
+        # Find associate trkjet index
+        trkjet_ind = []
+        for ind in fj:
+            trkjet_ind.append(list(mychain.trkjet_ind).index(ind))
+
         mjinds = []
         fjinds = []
-        if len(fj) < 2:
+        if len(trkjet_ind) < 2:
             continue
-        for ind in fj:
+        for ind in trkjet_ind:
             if mychain.trkjet_assocMuon_n[ind] >= 1:
                 mjinds.append(ind)
         if len(mjinds) == 0:
             continue
         fjinds.append(min(mjinds))
         # Find trkjet with largest pt to be the nmj
-        if fj[0] == fjinds[0]:
-            fjinds.append(fj[1])
+        if trkjet_ind[0] == fjinds[0]:
+            fjinds.append(trkjet_ind[1])
         else:
-            fjinds.append(fj[0])
+            fjinds.append(trkjet_ind[0])
         fat_jets.append(fjinds)
     return fat_jets
                 
 # Define functions which return fat jet labels
-
 def GetPt(fj):
     pt_label = []
     # Get muon jet pt label
@@ -114,6 +118,13 @@ def GetFlavor(fj):
     return ''.join(flavors)
 
 # Define function for Xbb tagging
+def XbbScoreTagger():
+    tagged = []
+    pH = np.array(mychain.fat_XbbScoreHiggs)
+    pTop = np.array(mychain.fat_XbbScoreTop)
+    pQCD = np.array(mychain.fat_XbbScoreQCD)
+    xbb_discriminant = np.log(pH / ((1-xbbtagger['topFrac']) * pQCD + xbbtagger['topFrac'] * pTop))
+    return (xbb_discriminant > xbbtagger['cut']).tolist()
 
 
 # Declare combined histograms for all provided variables
@@ -151,10 +162,10 @@ for name in os.listdir(directory):
                 print mychain.fat_assocTrkjet_ind
                 print 'trkjet_assocMuon_n ='
                 print mychain.trkjet_assocMuon_n
+                print 'trkjet_ind ='
+                print mychain.trkjet_ind
                 print fjFilter()
-                for fj in fjFilter():
-                    print GetFlavor(fj)
-                    print GetPt(fj)
+                print XbbScoreTagger()
                 print mychain.fat_assocTrkjet_ind.size()
                 print 'trkjet_pt ='
                 print mychain.trkjet_pt
