@@ -21,11 +21,8 @@
         "427107" : {"xsec" : 1.6215E-02, "filterEff" : 3.5327E-05}
     },
     "trigger":{
-        "fat_eta" : [],
-        "leading_fat_pt" : [],
-        "number_of_subjet" : [],
-        "fat_mass" : [75, 145],
-        "eve_HLT" : {"variable" : "eve_HLT_j460_a10_lcw_subjes_L1J100", "trigger_value" : 1}
+        "leading_fat_pt" : 500,
+        "eve_HLT" : "eve_HLT_j460_a10_lcw_subjes_L1J100"
     },
     "variables":{
         "fat_pt" : {"min" : 0, "max" : 2500000, "bin" : 100},

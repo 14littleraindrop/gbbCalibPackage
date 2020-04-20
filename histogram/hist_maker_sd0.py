@@ -58,8 +58,8 @@ hists = {
 # Muon selection: Return a list with 1st entry = muon trkjet index, 2nd entry = non-muon trkjet index
 def fjFilter():
     fat_jets = []
-    fat_index = []
-    fat_ind = 0
+    fj_index = []
+    fj_ind = 0
     for fj in mychain.fat_assocTrkjet_ind:
         # Find associate trkjet index
         trkjet_ind = []
@@ -83,10 +83,22 @@ def fjFilter():
             fjinds.append(trkjet_ind[0])
         fat_jets.append(fjinds)
         print fat_ind
-        fat_index.append(fat_ind)
-        fat_ind += 1
-    return fat_jets, fat_index
-                
+        fj_index.append(fj_ind)
+        fj_ind += 1
+    return fat_jets, fj_index
+
+# Define triggers
+def eveTrigger():
+    eve_HLT = trigger['eve_HLT']
+    if eve_HLT == eve_HLT_j460_a10_lcw_subjes_L1J100:
+       return  mychain.eve_HLT-j460_a10_lcw_subjes_L1J100 == 1
+    elif eve_HLT == eve_HLT_j420_a10t_lcw_jes_40smcINF_L1J100:
+        return mychain.eve_HLT_j420_a10t_lcw_jes_40smcINF_L1J100 ==1
+    elif eve_HLT == eve_HLT_2j330_a10t_lcw_jes_40smcINF_L1J100:
+        return mychain.eve_HLT_2j330_a10t_lcw_jes_40smcINF_L1J100 == 1
+    else:
+        raise ValueError('eve_HLT not matched or not found')
+
 # Define functions which return fat jet labels
 def GetPt(fj):
     pt_label = []
@@ -173,13 +185,11 @@ for name in os.listdir(directory):
                 print mychain.fat_assocTrkjet_ind
                 print 'trkjet_assocMuon_n ='
                 print mychain.trkjet_assocMuon_n
-                print 'trkjet_ind ='
-                print mychain.trkjet_ind
                 print fjFilter()[0]
-                print XbbScoreTagger(fjFilter()[1])
-                print mychain.fat_assocTrkjet_ind.size()
                 print 'trkjet_pt ='
                 print mychain.trkjet_pt
+                print 'eve_HLT_j460_a10_lcw_subjes_L1J100'
+                print mychain.eve_HLT_j460_a10_lcw_subjes_L1J100
                 if nb <= 0:
                     continue
 
