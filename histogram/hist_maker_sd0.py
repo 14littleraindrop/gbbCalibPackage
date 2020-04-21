@@ -82,22 +82,38 @@ def fjFilter():
         else:
             fjinds.append(trkjet_ind[0])
         fat_jets.append(fjinds)
-        print fat_ind
         fj_index.append(fj_ind)
         fj_ind += 1
     return fat_jets, fj_index
 
 # Define triggers
-def eveTrigger():
+def eve_HLT():
     eve_HLT = trigger['eve_HLT']
-    if eve_HLT == eve_HLT_j460_a10_lcw_subjes_L1J100:
-       return  mychain.eve_HLT-j460_a10_lcw_subjes_L1J100 == 1
-    elif eve_HLT == eve_HLT_j420_a10t_lcw_jes_40smcINF_L1J100:
+    if eve_HLT == 'None':
+        return True
+    elif eve_HLT == 'eve_HLT_j460_a10_lcw_subjes_L1J100':
+       return  mychain.eve_HLT_j460_a10_lcw_subjes_L1J100 == 1
+    elif eve_HLT == 'eve_HLT_j420_a10t_lcw_jes_40smcINF_L1J100':
         return mychain.eve_HLT_j420_a10t_lcw_jes_40smcINF_L1J100 ==1
-    elif eve_HLT == eve_HLT_2j330_a10t_lcw_jes_40smcINF_L1J100:
+    elif eve_HLT == 'eve_HLT_2j330_a10t_lcw_jes_40smcINF_L1J100':
         return mychain.eve_HLT_2j330_a10t_lcw_jes_40smcINF_L1J100 == 1
     else:
         raise ValueError('eve_HLT not matched or not found')
+
+def leading_fat_pt():
+    pt_cut = trigger['leading_fat_pt']
+    if pt_cut == 'None':
+        return True
+    elif mychain.fat_pt[0]/100 >= pt_cut:
+        return True
+    else:
+        return False
+
+def eveTrigger():
+    if eve_HLT() and leading_fat_pt():
+        return True
+    else:
+        return False
 
 # Define functions which return fat jet labels
 def GetPt(fj):
@@ -188,8 +204,6 @@ for name in os.listdir(directory):
                 print fjFilter()[0]
                 print 'trkjet_pt ='
                 print mychain.trkjet_pt
-                print 'eve_HLT_j460_a10_lcw_subjes_L1J100'
-                print mychain.eve_HLT_j460_a10_lcw_subjes_L1J100
                 if nb <= 0:
                     continue
 
