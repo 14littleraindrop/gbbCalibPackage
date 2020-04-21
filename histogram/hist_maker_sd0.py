@@ -39,19 +39,46 @@ from ROOT.Math import PtEtaPhiEVector
 # Define histograms (only support 3x3 pt range)
 hists = {
         'l' + str(mjpt[0]) : {
-            'l' + str(nmjpt[0]) : {flavor : {} for flavor in flavors},
-            'g' + str(nmjpt[0]) + 'l' + str(nmjpt[1]) : {flavor : {} for flavor in flavors},
-            'g' + str(nmjpt[1]) : {flavor : {} for flavor in flavors}
+            'l' + str(nmjpt[0]) : {
+                '2TAG' : {flavor : 0 for flavor in flavors},
+                'NOT2TAG' : {flavor : 0 for flavor in flavors}
+                },
+            'g' + str(nmjpt[0]) + 'l' + str(nmjpt[1]) : {
+                '2TAG' : {flavor : 0 for flavor in flavors},
+                'NOT2TAG' : {flavor : 0 for flavor in flavors}
+                },
+            'g' + str(nmjpt[1]) : {
+                '2TAG' : {flavor : 0 for flavor in flavors},
+                'NOT2TAG' : {flavor : 0 for flavor in flavors}
+                }
             },
         'g' + str(mjpt[0]) + 'l' + str(mjpt[1]) : {
-            'l' + str(nmjpt[0]) : {flavor : {} for flavor in flavors},
-            'g' + str(nmjpt[0]) + 'l' + str(nmjpt[1]) : {flavor : {} for flavor in flavors},
-            'g' + str(nmjpt[1]) : {flavor : {} for flavor in flavors}
+            'l' + str(nmjpt[0]) : {
+                '2TAG' : {flavor : 0 for flavor in flavors},
+                'NOT2TAG' : {flavor : 0 for flavor in flavors}
+                },
+            'g' + str(nmjpt[0]) + 'l' + str(nmjpt[1]) : { 
+                '2TAG' : {flavor : 0 for flavor in flavors},
+                'NOT2TAG' : {flavor : 0 for flavor in flavors}
+                },
+            'g' + str(nmjpt[1]) : {
+                '2TAG' : {flavor : 0 for flavor in flavors},
+                'NOT2TAG' : {flavor : 0 for flavor in flavors}
+                }
             },
         'g' + str(mjpt[1]) : {
-            'l' + str(nmjpt[0]) : {flavor : {} for flavor in flavors},
-            'g' + str(nmjpt[0]) + 'l' + str(nmjpt[1]) : {flavor : {} for flavor in flavors},
-            'g' + str(nmjpt[1]) : {flavor : {} for flavor in flavors}
+            'l' + str(nmjpt[0]) : {
+                '2TAG' : {flavor : 0 for flavor in flavors},
+                'NOT2TAG' : {flavor : 0 for flavor in flavors}
+                },
+            'g' + str(nmjpt[0]) + 'l' + str(nmjpt[1]) : {
+                '2TAG' : {flavor : 0 for flavor in flavors},
+                'NOT2TAG' : {flavor : 0 for flavor in flavors}
+                },
+            'g' + str(nmjpt[1]) : {
+                '2TAG' : {flavor : 0 for flavor in flavors},
+                'NOT2TAG' : {flavor : 0 for flavor in flavors}
+                }
             }
         }
 
