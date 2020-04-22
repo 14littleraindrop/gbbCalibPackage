@@ -37,50 +37,52 @@ from ROOT import TFile
 from ROOT.Math import PtEtaPhiEVector
 
 # Define histograms (only support 3x3 pt range)
-hists = {
-        'l' + str(mjpt[0]) : {
-            'l' + str(nmjpt[0]) : {
-                '2TAG' : {flavor : 0 for flavor in flavors},
-                'NOT2TAG' : {flavor : 0 for flavor in flavors}
+def hist_init():
+    hists = {
+            'l' + str(mjpt[0]) : {
+                'l' + str(nmjpt[0]) : {
+                    '2TAG' : {flavor : 0 for flavor in flavors},
+                    'NOT2TAG' : {flavor : 0 for flavor in flavors}
+                    },
+                'g' + str(nmjpt[0]) + 'l' + str(nmjpt[1]) : {
+                    '2TAG' : {flavor : 0 for flavor in flavors},
+                    'NOT2TAG' : {flavor : 0 for flavor in flavors}
+                    },
+                'g' + str(nmjpt[1]) : {
+                    '2TAG' : {flavor : 0 for flavor in flavors},
+                    'NOT2TAG' : {flavor : 0 for flavor in flavors}
+                    }
                 },
-            'g' + str(nmjpt[0]) + 'l' + str(nmjpt[1]) : {
-                '2TAG' : {flavor : 0 for flavor in flavors},
-                'NOT2TAG' : {flavor : 0 for flavor in flavors}
+            'g' + str(mjpt[0]) + 'l' + str(mjpt[1]) : {
+                'l' + str(nmjpt[0]) : {
+                    '2TAG' : {flavor : 0 for flavor in flavors},
+                    'NOT2TAG' : {flavor : 0 for flavor in flavors}
+                    },
+                'g' + str(nmjpt[0]) + 'l' + str(nmjpt[1]) : {
+                    '2TAG' : {flavor : 0 for flavor in flavors},
+                    'NOT2TAG' : {flavor : 0 for flavor in flavors}
+                    },
+                'g' + str(nmjpt[1]) : {
+                    '2TAG' : {flavor : 0 for flavor in flavors},
+                    'NOT2TAG' : {flavor : 0 for flavor in flavors}
+                    }
                 },
-            'g' + str(nmjpt[1]) : {
-                '2TAG' : {flavor : 0 for flavor in flavors},
-                'NOT2TAG' : {flavor : 0 for flavor in flavors}
-                }
-            },
-        'g' + str(mjpt[0]) + 'l' + str(mjpt[1]) : {
-            'l' + str(nmjpt[0]) : {
-                '2TAG' : {flavor : 0 for flavor in flavors},
-                'NOT2TAG' : {flavor : 0 for flavor in flavors}
-                },
-            'g' + str(nmjpt[0]) + 'l' + str(nmjpt[1]) : { 
-                '2TAG' : {flavor : 0 for flavor in flavors},
-                'NOT2TAG' : {flavor : 0 for flavor in flavors}
-                },
-            'g' + str(nmjpt[1]) : {
-                '2TAG' : {flavor : 0 for flavor in flavors},
-                'NOT2TAG' : {flavor : 0 for flavor in flavors}
-                }
-            },
-        'g' + str(mjpt[1]) : {
-            'l' + str(nmjpt[0]) : {
-                '2TAG' : {flavor : 0 for flavor in flavors},
-                'NOT2TAG' : {flavor : 0 for flavor in flavors}
-                },
-            'g' + str(nmjpt[0]) + 'l' + str(nmjpt[1]) : {
-                '2TAG' : {flavor : 0 for flavor in flavors},
-                'NOT2TAG' : {flavor : 0 for flavor in flavors}
-                },
-            'g' + str(nmjpt[1]) : {
-                '2TAG' : {flavor : 0 for flavor in flavors},
-                'NOT2TAG' : {flavor : 0 for flavor in flavors}
+            'g' + str(mjpt[1]) : {
+                'l' + str(nmjpt[0]) : {
+                    '2TAG' : {flavor : 0 for flavor in flavors},
+                    'NOT2TAG' : {flavor : 0 for flavor in flavors}
+                    },
+                'g' + str(nmjpt[0]) + 'l' + str(nmjpt[1]) : {
+                    '2TAG' : {flavor : 0 for flavor in flavors},
+                    'NOT2TAG' : {flavor : 0 for flavor in flavors}
+                    },
+                'g' + str(nmjpt[1]) : {
+                    '2TAG' : {flavor : 0 for flavor in flavors},
+                    'NOT2TAG' : {flavor : 0 for flavor in flavors}
+                    }
                 }
             }
-        }
+    return hists
 
 # Muon selection: Return a list with 1st entry = muon trkjet index, 2nd entry = non-muon trkjet index
 def fjFilter():
@@ -111,7 +113,7 @@ def fjFilter():
         fat_jets.append(fjinds)
         fj_index.append(fj_ind)
         fj_ind += 1
-    return fat_jets, fj_index
+    return zip(fat_jets, fj_index)
 
 # Define triggers
 def eve_HLT():
@@ -179,34 +181,29 @@ def GetFlavor(fj):
 
 # Define function for Xbb tagging
 def XbbScoreTagger(fj_index):
-    status = []
     pH = np.array(mychain.fat_XbbScoreHiggs)
     pTop = np.array(mychain.fat_XbbScoreTop)
     pQCD = np.array(mychain.fat_XbbScoreQCD)
     xbb_discriminant = np.log(pH / ((1-xbbtagger['topFrac']) * pQCD + xbbtagger['topFrac'] * pTop))
     print pH, pQCD
-    for ind in fj_index:
-        if xbb_discriminant[ind] > xbbtagger['cut']:
-            status.append('2TAG')
-        else:
-            status.append('NOT2TAG')
-    return status
+    if xbb_discriminant[fj_index] > xbbtagger['cut']:
+        return '2TAG'
+    else:
+        return 'NOT2TAG'
+
+# Define function to calculate Sd0
+def GetSd0(trkjet):
+    None
 
 
-# Declare combined histograms for all provided variables
-combined_hist = { var : Histogram('combined_' + var) for var in variables.keys()}
-for var in variables.keys():
-    combined_hist[var].setup_bins(variables[var]['min'], variables[var]['max'], variables[var]['bin'])
-
-# Create directories to hold pickled histograms for each variables
-for var in variables.keys():
-    os.mkdir(args.output[0] + '/' + var)
-
+# Main code
 for name in os.listdir(directory):
     print 'Processing: %s... ' % (name)
-    hist = {var : Histogram(name.split('.')[3] + '_' + var) for var in variables.keys()}
+    hists = {var : hist_init() for var in variables.keys()}
+    '''
     for var in variables.keys():
-        hist[var].setup_bins(variables[var]['min'], variables[var]['max'], variables[var]['bin'])
+        hists[var].setup_bins(variables[var]['min'], variables[var]['max'], variables[var]['bin'])
+    '''
 
     # Get weighting info for the slice
     sum_of_w = 0
@@ -228,24 +225,40 @@ for name in os.listdir(directory):
                 print mychain.fat_assocTrkjet_ind
                 print 'trkjet_assocMuon_n ='
                 print mychain.trkjet_assocMuon_n
-                print fjFilter()[0]
                 print 'trkjet_pt ='
                 print mychain.trkjet_pt
                 if nb <= 0:
                     continue
 
-                # TODO: Check trigger value
-                '''
-                if mychain.trigger['eve_HLT']['variable'] != 1:
-                    continue
-                if mychain.trigger['leading_fat_pt']:
-                    pass
-                '''
-                '''
-                values = {var : 0 for var in variables.keys()}
+                for fj in fjFilter():
+                    mj_ind = fj[0][0]
+                    nmj_ind = fj[0][1]
+                    fj_ind = fj[1]
+                    pt_label = GetPt(fj[0])
+                    flavor_label = GetFlavor(fj[0])
+                    tag_label = XbbScoreTagger(fj_ind)
+                    name = 'mjpt_' + pt_label[0] + '_nmjpt_' + pt_label[1] + '_' + tag_label + '_' + flavor_label
+
+                    values = {var : 0 for var in variables.keys()}
+                    # TODO: read out variable values for each fat jet
+
+                    # Accesses histogram, check existence
+                    for var in variables.keys():
+                        if hists[var][pt_label[0]][pt_label[1]][tag_label][flavor_label] == 0:
+                            name 
+
+'''
+                for fj in fjs:
+                    pt_label = GetPt(fj)
+                    flavor_label = GetFlavor(fj)
+                    tag_label = XbbScoreTagger()
+                    values = {var : 0 for var in variables.keys()}
+                    for var in variables.keys():
+                        if var == 'meanSdo':
+                            None
                 for var in variables.keys():
                     if var == 'fat_pt':
-                        values[var] = mychain.fat_pt
+                        values[var] = [mychain.fat_pt[i] for i in fj_inds]
                     elif var == 'fat_mass':
                         values[var] = [PtEtaPhiEVector(pt, eta, phi, e).mass()
                                 for (pt, eta, phi, e) in list(zip(
@@ -272,7 +285,7 @@ for name in os.listdir(directory):
                     for item in values[var]:
                         if not np.isnan(item) and not np.isinf(item):
                             hist[var].add_point(item, mc_eve_w)
-                '''
+            
 
     # Add on slice-wise weight
     for var in variables.keys():
@@ -283,3 +296,5 @@ for name in os.listdir(directory):
 [combined_hist[var].pickle(args.output[0] + '/' + var) for var in variables.keys()]
 print 'Combined histogram has been created.'
 print 'Done!'
+
+'''
