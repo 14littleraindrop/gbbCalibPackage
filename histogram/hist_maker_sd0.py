@@ -185,7 +185,6 @@ def XbbScoreTagger(fj_index):
     pTop = np.array(mychain.fat_XbbScoreTop)
     pQCD = np.array(mychain.fat_XbbScoreQCD)
     xbb_discriminant = np.log(pH / ((1-xbbtagger['topFrac']) * pQCD + xbbtagger['topFrac'] * pTop))
-    print pH, pQCD
     if xbb_discriminant[fj_index] > xbbtagger['cut']:
         return '2TAG'
     else:
@@ -195,22 +194,24 @@ def XbbScoreTagger(fj_index):
 def GetSd0(trkjet):
     None
 
+# Creat directories to hole histograms for each variables
+for var in variables.keys():
+    os.mkdir(args.output[0] + '/' + 'var')
+
+# Declare combined histograms for all provided variabels
+combined_hists = {var : hist_init() for var in variables.keys()}
 
 # Main code
 for name in os.listdir(directory):
     print 'Processing: %s... ' % (name)
     hists = {var : hist_init() for var in variables.keys()}
-    '''
-    for var in variables.keys():
-        hists[var].setup_bins(variables[var]['min'], variables[var]['max'], variables[var]['bin'])
-    '''
 
     # Get weighting info for the slice
     sum_of_w = 0
     xsec = weight[name.split('.')[3]]['xsec']
     filterEff = weight[name.split('.')[3]]['filterEff']
 
-    # Loop over root files in one mc slice
+    # Loop over root files in each mc slice
     with open(os.path.join(directory, name), 'r') as f:
         for line in f.readlines():
             tfile = TFile(line.strip())
@@ -221,14 +222,12 @@ for name in os.listdir(directory):
             # Get leaf value
             for i in range(entries):
                 nb = mychain.GetEntry(i)
-                print 'fat_assocTrkjet_ind ='
-                print mychain.fat_assocTrkjet_ind
-                print 'trkjet_assocMuon_n ='
-                print mychain.trkjet_assocMuon_n
-                print 'trkjet_pt ='
-                print mychain.trkjet_pt
                 if nb <= 0:
                     continue
+                
+                # Get event weight
+                mc_eve_w = mychain.eve_mc_w * mychain.eve_pu_w
+                sum_of_w = sum_of_w + mc_eve_w
 
                 for fj in fjFilter():
                     mj_ind = fj[0][0]
@@ -245,48 +244,24 @@ for name in os.listdir(directory):
                     # Accesses histogram, check existence
                     for var in variables.keys():
                         if hists[var][pt_label[0]][pt_label[1]][tag_label][flavor_label] == 0:
-                            name 
+                            hists[var][pt_label[0]][pt_label[1]][tag_label][flavor_label] = \
+                                    Histogram(name + '_var' + name.slpit['.'][3])
+                            hists[var][pt_label[0]][pt_label[1]][tag_label][flavor_label].setup_bins\
+                                    (variables[var]['min'], variables[var]['max'], variables[var]['bin'])
+                            hists[var][pt_label[0]][pt_label[1]][tag_label][flavor_label].add_point(values[var], mc_eve_w)
 
-'''
-                for fj in fjs:
-                    pt_label = GetPt(fj)
-                    flavor_label = GetFlavor(fj)
-                    tag_label = XbbScoreTagger()
-                    values = {var : 0 for var in variables.keys()}
-                    for var in variables.keys():
-                        if var == 'meanSdo':
-                            None
-                for var in variables.keys():
-                    if var == 'fat_pt':
-                        values[var] = [mychain.fat_pt[i] for i in fj_inds]
-                    elif var == 'fat_mass':
-                        values[var] = [PtEtaPhiEVector(pt, eta, phi, e).mass()
-                                for (pt, eta, phi, e) in list(zip(
-                                    mychain.fat_pt, mychain.fat_eta,
-                                    mychain.fat_phi, mychain.fat_E))]
-                    elif var == 'fat_eta':
-                        values[var] = mychain.fat_eta
-                    elif var == 'trkjet_MV2c10':
-                        values[var] = mychain.trkjet_MV2c10
-                    elif var == 'D':
-                        if args.f:
-                            f = args.f[0]
-                            pH = np.array(mychain.fat_XbbScoreHiggs)
-                            pTop = np.array(mychain.fat_XbbScoreTop)
-                            pQCD = np.array(mychain.fat_XbbScoerQCD)
-                            values[var] = np.log(pH / ((1-f) * pQCD + f * pTop))
                         else:
-                            raise ValueError('f is required for plotting D')
-                    else:
-                        raise ValueError('Unsupported variable name.')
-                mc_eve_w = mychain.eve_mc_w * mychain.eve_pu_w
-                sum_of_w = sum_of_w + mc_eve_w
-                for var in variables.keys():
-                    for item in values[var]:
-                        if not np.isnan(item) and not np.isinf(item):
-                            hist[var].add_point(item, mc_eve_w)
-            
-
+                            hists[var][pt_label[0]][pt_label[1]][tag_label][flavor_label].add_point(values[var], mc_eve_w)
+    # Add on slice-wise weight
+    for var in hist.keys():
+        for mjpt in hist[var].keys():
+            for nmjpt in hist[var][mjpt].keys():
+                for tag in hist[var][mjpt][nmjpt].keys():
+                    for flavor in hist[var][mjpt][nmjpt][tag].keys():
+                        hist[var][mjpt][nmjpt][tag][flavor].rescale(xsec * filterEff / sum_of_w)
+                        if combined_hists[var][mjpt][nmjpt][tag][flavor] == 0:
+                            # TODO: combine histograms
+'''
     # Add on slice-wise weight
     for var in variables.keys():
         hist[var].rescale(xsec * filterEff / sum_of_w)
