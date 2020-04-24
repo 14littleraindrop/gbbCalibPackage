@@ -32,6 +32,8 @@ nmjpt = config['pt_bins']['nmjet']
 flavors = config['flavors']
 xbbtagger = config['XbbTagger']
 os.mkdir(args.output[0])
+for var in variables.keys():
+    os.mkdir(args.output[0] + '/' + var)
 
 from ROOT import TFile
 from ROOT.Math import PtEtaPhiEVector
@@ -175,9 +177,16 @@ def GetFlavor(fj):
             flavors.append('C')
         else:
             flavors.append('L')
-    print flavors
-    flavors.sort()
-    return ''.join(flavors)
+    fj_flavor = ''.join(flavors)
+    print fj_flavor
+    if fj_flavor == 'BL' or 'BC':
+        return 'BL'
+    elif fj_flavor == 'CL' or 'CB':
+        return 'CL'
+    elif fj_flavor == 'LL' or 'LB' or 'LC':
+        return 'LL'
+    else:
+        return fj_flavor
 
 # Define function for Xbb tagging
 def XbbScoreTagger(fj_index):
@@ -193,10 +202,6 @@ def XbbScoreTagger(fj_index):
 # Define function to calculate Sd0
 def GetSd0(trkjet):
     None
-
-# Creat directories to hole histograms for each variables
-for var in variables.keys():
-    os.mkdir(args.output[0] + '/' + 'var')
 
 # Declare combined histograms for all provided variabels
 combined_hists = {var : hist_init() for var in variables.keys()}
@@ -236,7 +241,7 @@ for name in os.listdir(directory):
                     pt_label = GetPt(fj[0])
                     flavor_label = GetFlavor(fj[0])
                     tag_label = XbbScoreTagger(fj_ind)
-                    name = 'mjpt_' + pt_label[0] + '_nmjpt_' + pt_label[1] + '_' + tag_label + '_' + flavor_label
+                    trkjet_name = 'mjpt_' + pt_label[0] + '_nmjpt_' + pt_label[1] + '_' + tag_label + '_' + flavor_label
 
                     values = {var : 0 for var in variables.keys()}
                     # TODO: read out variable values for each fat jet
@@ -245,7 +250,7 @@ for name in os.listdir(directory):
                     for var in variables.keys():
                         if hists[var][pt_label[0]][pt_label[1]][tag_label][flavor_label] == 0:
                             hists[var][pt_label[0]][pt_label[1]][tag_label][flavor_label] = \
-                                    Histogram(name + '_var' + name.slpit['.'][3])
+                                    Histogram(trkjet_name + '_' + var + name.split('.')[3])
                             hists[var][pt_label[0]][pt_label[1]][tag_label][flavor_label].setup_bins\
                                     (variables[var]['min'], variables[var]['max'], variables[var]['bin'])
                             hists[var][pt_label[0]][pt_label[1]][tag_label][flavor_label].add_point(values[var], mc_eve_w)
@@ -253,15 +258,16 @@ for name in os.listdir(directory):
                         else:
                             hists[var][pt_label[0]][pt_label[1]][tag_label][flavor_label].add_point(values[var], mc_eve_w)
     # Add on slice-wise weight
-    for var in hist.keys():
-        for mjpt in hist[var].keys():
-            for nmjpt in hist[var][mjpt].keys():
-                for tag in hist[var][mjpt][nmjpt].keys():
-                    for flavor in hist[var][mjpt][nmjpt][tag].keys():
-                        hist[var][mjpt][nmjpt][tag][flavor].rescale(xsec * filterEff / sum_of_w)
+    for var in hists.keys():
+        for mjpt in hists[var].keys():
+            for nmjpt in hists[var][mjpt].keys():
+                for tag in hists[var][mjpt][nmjpt].keys():
+                    for flavor in hists[var][mjpt][nmjpt][tag].keys():
+                        hists[var][mjpt][nmjpt][tag][flavor].rescale(xsec * filterEff / sum_of_w)
                         if combined_hists[var][mjpt][nmjpt][tag][flavor] == 0:
                             # TODO: combine histograms
-'''
+                            None
+    '''
     # Add on slice-wise weight
     for var in variables.keys():
         hist[var].rescale(xsec * filterEff / sum_of_w)
@@ -272,4 +278,4 @@ for name in os.listdir(directory):
 print 'Combined histogram has been created.'
 print 'Done!'
 
-'''
+    '''
