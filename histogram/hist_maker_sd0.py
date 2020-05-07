@@ -27,8 +27,8 @@ with open(args.config[0]) as f:
 weight = config['weight']
 trigger = config['trigger']
 variables = config['variables']
-mjpt = config['pt_bins']['mjet']
-nmjpt = config['pt_bins']['nmjet']
+mjpt_bins = config['pt_bins']['mjet']
+nmjpt_bins = config['pt_bins']['nmjet']
 flavors = config['flavors']
 xbbtagger = config['XbbTagger']
 os.mkdir(args.output[0])
@@ -41,44 +41,44 @@ from ROOT.Math import PtEtaPhiEVector
 # Define histograms (only support 3x3 pt range)
 def hist_init():
     hists = {
-            'l' + str(mjpt[0]) : {
-                'l' + str(nmjpt[0]) : {
+            'l' + str(mjpt_bins[0]) : {
+                'l' + str(nmjpt_bins[0]) : {
                     '2TAG' : {flavor : 0 for flavor in flavors},
                     'NOT2TAG' : {flavor : 0 for flavor in flavors}
                     },
-                'g' + str(nmjpt[0]) + 'l' + str(nmjpt[1]) : {
+                'g' + str(nmjpt_bins[0]) + 'l' + str(nmjpt_bins[1]) : {
                     '2TAG' : {flavor : 0 for flavor in flavors},
                     'NOT2TAG' : {flavor : 0 for flavor in flavors}
                     },
-                'g' + str(nmjpt[1]) : {
+                'g' + str(nmjpt_bins[1]) : {
                     '2TAG' : {flavor : 0 for flavor in flavors},
                     'NOT2TAG' : {flavor : 0 for flavor in flavors}
                     }
                 },
-            'g' + str(mjpt[0]) + 'l' + str(mjpt[1]) : {
-                'l' + str(nmjpt[0]) : {
+            'g' + str(mjpt_bins[0]) + 'l' + str(mjpt_bins[1]) : {
+                'l' + str(nmjpt_bins[0]) : {
                     '2TAG' : {flavor : 0 for flavor in flavors},
                     'NOT2TAG' : {flavor : 0 for flavor in flavors}
                     },
-                'g' + str(nmjpt[0]) + 'l' + str(nmjpt[1]) : {
+                'g' + str(nmjpt_bins[0]) + 'l' + str(nmjpt_bins[1]) : {
                     '2TAG' : {flavor : 0 for flavor in flavors},
                     'NOT2TAG' : {flavor : 0 for flavor in flavors}
                     },
-                'g' + str(nmjpt[1]) : {
+                'g' + str(nmjpt_bins[1]) : {
                     '2TAG' : {flavor : 0 for flavor in flavors},
                     'NOT2TAG' : {flavor : 0 for flavor in flavors}
                     }
                 },
-            'g' + str(mjpt[1]) : {
-                'l' + str(nmjpt[0]) : {
+            'g' + str(mjpt_bins[1]) : {
+                'l' + str(nmjpt_bins[0]) : {
                     '2TAG' : {flavor : 0 for flavor in flavors},
                     'NOT2TAG' : {flavor : 0 for flavor in flavors}
                     },
-                'g' + str(nmjpt[0]) + 'l' + str(nmjpt[1]) : {
+                'g' + str(nmjpt_bins[0]) + 'l' + str(nmjpt_bins[1]) : {
                     '2TAG' : {flavor : 0 for flavor in flavors},
                     'NOT2TAG' : {flavor : 0 for flavor in flavors}
                     },
-                'g' + str(nmjpt[1]) : {
+                'g' + str(nmjpt_bins[1]) : {
                     '2TAG' : {flavor : 0 for flavor in flavors},
                     'NOT2TAG' : {flavor : 0 for flavor in flavors}
                     }
@@ -151,20 +151,20 @@ def GetPt(fj):
     pt_label = []
     # Get muon jet pt label
     muon_pt = mychain.trkjet_pt[fj[0]]/1000
-    if muon_pt <= mjpt[0]:
-        pt_label.append('l' + str(mjpt[0]))
-    elif muon_pt <= mjpt[1]:
-        pt_label.append('g' + str(mjpt[0]) + 'l' + str(mjpt[1]))
+    if muon_pt <= mjpt_bins[0]:
+        pt_label.append('l' + str(mjpt_bins[0]))
+    elif muon_pt <= mjpt_bins[1]:
+        pt_label.append('g' + str(mjpt_bins[0]) + 'l' + str(mjpt_bins[1]))
     else:
-        pt_label.append('g' + str(mjpt[1]))
+        pt_label.append('g' + str(mjpt_bins[1]))
     # Get non-muon jet pt label
     nmuon_pt = mychain.trkjet_pt[fj[1]]/1000
-    if nmuon_pt <= nmjpt[0]:
-        pt_label.append('l' + str(nmjpt[0]))
-    elif nmuon_pt <= nmjpt[1]:
-        pt_label.append('g' + str(nmjpt[0]) + 'l' + str(nmjpt[1]))
+    if nmuon_pt <= nmjpt_bins[0]:
+        pt_label.append('l' + str(nmjpt_bins[0]))
+    elif nmuon_pt <= nmjpt_bins[1]:
+        pt_label.append('g' + str(nmjpt_bins[0]) + 'l' + str(nmjpt_bins[1]))
     else:
-        pt_label.append('g' + str(nmjpt[1]))
+        pt_label.append('g' + str(nmjpt_bins[1]))
     return pt_label
 
 def GetFlavor(fj):
@@ -178,7 +178,6 @@ def GetFlavor(fj):
         else:
             flavors.append('L')
     fj_flavor = ''.join(flavors)
-    print fj_flavor
     if fj_flavor == 'BL' or 'BC':
         return 'BL'
     elif fj_flavor == 'CL' or 'CB':
@@ -205,6 +204,14 @@ def GetSd0(trkjet):
 
 # Declare combined histograms for all provided variabels
 combined_hists = {var : hist_init() for var in variables.keys()}
+for var in combined_hists.keys():
+    for mjpt in combined_hists[var].keys():
+        for nmjpt in combined_hists[var][mjpt].keys():
+            for tag in combined_hists[var][mjpt][nmjpt].keys():
+                for flavor in combined_hists[var][mjpt][nmjpt][tag].keys():
+                    combined_hists[var][mjpt][nmjpt][tag][flavor] = Histogram('mjpt_' + mjpt + '_nmjpt_' + nmjpt + '_' + tag + '_' \
+                            + flavor + '_' + var)
+                    combined_hists[var][mjpt][nmjpt][tag][flavor].setup_bins(variables[var]['min'], variables[var]['max'], variables[var]['bin'])
 
 # Main code
 for name in os.listdir(directory):
@@ -263,16 +270,14 @@ for name in os.listdir(directory):
             for nmjpt in hists[var][mjpt].keys():
                 for tag in hists[var][mjpt][nmjpt].keys():
                     for flavor in hists[var][mjpt][nmjpt][tag].keys():
-                        hists[var][mjpt][nmjpt][tag][flavor].rescale(xsec * filterEff / sum_of_w)
-                        if combined_hists[var][mjpt][nmjpt][tag][flavor] == 0:
-                            # TODO: combine histograms
-                            None
+                        if hists[var][mjpt][nmjpt][tag][flavor] == 0:
+                            continue
+                        else:
+                            hists[var][mjpt][nmjpt][tag][flavor].rescale(xsec * filterEff / sum_of_w)
+                            combined_hists[var][mjpt][nmjpt][tag][flavor].combine(hists[var][mjpt][nmjpt][tag][flavor])
+    print 'Histpgrams for %s has been created.' % (name)
+
     '''
-    # Add on slice-wise weight
-    for var in variables.keys():
-        hist[var].rescale(xsec * filterEff / sum_of_w)
-        hist[var].pickle(args.output[0] + '/' + var)
-        combined_hist[var].combine(hist[var])
     print 'Histogram for %s has been created.' % (name)
 [combined_hist[var].pickle(args.output[0] + '/' + var) for var in variables.keys()]
 print 'Combined histogram has been created.'
