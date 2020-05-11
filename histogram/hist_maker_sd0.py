@@ -277,10 +277,19 @@ for name in os.listdir(directory):
                             combined_hists[var][mjpt][nmjpt][tag][flavor].combine(hists[var][mjpt][nmjpt][tag][flavor])
     print 'Histpgrams for %s has been created.' % (name)
 
-    '''
+# Store combined histograms
+for var in combined_hists.keys():
+    for mjpt in combined_hists[var].keys():
+        for nmjpt in combined_hists[var][mjpt].keys():
+            for tag in combined_hists[var][mjpt][nmjpt].keys():
+                for flavor in combined_hists[var][mjpt][nmjpt][tag].keys():
+                    combined_hists[var][mjpt][nmjpt][tag][flavor].pickle(args.output[0] + '/' + var)
+print 'Combined histograms has been created.'
+print 'Done!'
+
+'''
     print 'Histogram for %s has been created.' % (name)
 [combined_hist[var].pickle(args.output[0] + '/' + var) for var in variables.keys()]
 print 'Combined histogram has been created.'
 print 'Done!'
-
-    '''
+'''
