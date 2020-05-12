@@ -263,7 +263,6 @@ for name in os.listdir(directory):
                 sum_of_w = sum_of_w + mc_eve_w
 
                 for fj in fjFilter():
-                    print 'fj', fj
                     mj_ind = fj[0][0]
                     nmj_ind = fj[0][1]
                     fj_ind = fj[1]
@@ -274,9 +273,11 @@ for name in os.listdir(directory):
 
                     values = {var : 0 for var in variables.keys()}
                     # TODO: read out variable values for each fat jet
-                    for trkjet_ind in fj[0]:
-                        print trkjet_ind
-                        print Get_meanSd0(trkjet_ind)
+                    for var in variables.keys():
+                        if var == 'mjmeanSd0':
+                            values[var] = Get_meanSd0(mj_ind)
+                        if var == 'nmjmeanSd0':
+                            values[var] = Get_meanSd0(nmj_ind)
 
                     # Accesses histogram, check existence
                     for var in variables.keys():
