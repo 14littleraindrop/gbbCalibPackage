@@ -199,8 +199,18 @@ def XbbScoreTagger(fj_index):
         return 'NOT2TAG'
 
 # Define function to calculate Sd0
-def GetSd0(trkjet):
-    None
+def Get_meanSd0(trkjet_ind):
+    d0s = np.array(mychain.trkjet_assocTrk_d0[trkjet_ind])
+    d0errs = np.array(mychain.trkjet_assocTrk_d0err[trkjet_ind])
+    phis = np.array(mychain.trkjet_assocTrk_phi[trkjet_ind])
+    trkjet_phi = mychain.trkjet_phi[trkjet_ind]
+
+    sd0_sign = np.where(np.sin(trkjet_phi - phis) * d0s > 0, 1, -1)
+    sd0s = sd0_sign * np.abs(d0s) / d0errs
+    return np.mean(sd0s)
+
+
+
 
 # Declare combined histograms for all provided variabels
 combined_hists = {var : hist_init() for var in variables.keys()}
@@ -236,12 +246,24 @@ for name in os.listdir(directory):
                 nb = mychain.GetEntry(i)
                 if nb <= 0:
                     continue
+
+                '''
+                print 'trkjet_assocTrk_d0 ='
+                print mychain.trkjet_assocTrk_d0
+                print 'trkjet_assoc_d0err ='
+                print mychain.trkjet_assocTrk_d0err
+                print 'trkjet_phi ='
+                print mychain.trkjet_phi
+                print 'fat_assocTrkjet_ind ='
+                print mychain.fat_assocTrkjet_ind
+                '''
                 
                 # Get event weight
                 mc_eve_w = mychain.eve_mc_w * mychain.eve_pu_w
                 sum_of_w = sum_of_w + mc_eve_w
 
                 for fj in fjFilter():
+                    print 'fj', fj
                     mj_ind = fj[0][0]
                     nmj_ind = fj[0][1]
                     fj_ind = fj[1]
@@ -252,6 +274,9 @@ for name in os.listdir(directory):
 
                     values = {var : 0 for var in variables.keys()}
                     # TODO: read out variable values for each fat jet
+                    for trkjet_ind in fj[0]:
+                        print trkjet_ind
+                        print Get_meanSd0(trkjet_ind)
 
                     # Accesses histogram, check existence
                     for var in variables.keys():
@@ -286,10 +311,3 @@ for var in combined_hists.keys():
                     combined_hists[var][mjpt][nmjpt][tag][flavor].pickle(args.output[0] + '/' + var)
 print 'Combined histograms has been created.'
 print 'Done!'
-
-'''
-    print 'Histogram for %s has been created.' % (name)
-[combined_hist[var].pickle(args.output[0] + '/' + var) for var in variables.keys()]
-print 'Combined histogram has been created.'
-print 'Done!'
-'''
