@@ -205,9 +205,12 @@ def Get_meanSd0(trkjet_ind):
     phis = np.array(mychain.trkjet_assocTrk_phi[trkjet_ind])
     trkjet_phi = mychain.trkjet_phi[trkjet_ind]
 
-    sd0_sign = np.where(np.sin(trkjet_phi - phis) * d0s > 0, 1, -1)
-    sd0s = sd0_sign * np.abs(d0s) / d0errs
-    return np.mean(sd0s)
+    if len(d0s) == 0:
+        return np.nan
+    else:
+        sd0_sign = np.where(np.sin(trkjet_phi - phis) * d0s > 0, 1, -1)
+        sd0s = sd0_sign * np.abs(d0s) / d0errs
+        return np.mean(sd0s)
 
 
 
@@ -281,15 +284,16 @@ for name in os.listdir(directory):
 
                     # Accesses histogram, check existence
                     for var in variables.keys():
-                        if hists[var][pt_label[0]][pt_label[1]][tag_label][flavor_label] == 0:
-                            hists[var][pt_label[0]][pt_label[1]][tag_label][flavor_label] = \
-                                    Histogram(trkjet_name + '_' + var + name.split('.')[3])
-                            hists[var][pt_label[0]][pt_label[1]][tag_label][flavor_label].setup_bins\
-                                    (variables[var]['min'], variables[var]['max'], variables[var]['bin'])
-                            hists[var][pt_label[0]][pt_label[1]][tag_label][flavor_label].add_point(values[var], mc_eve_w)
+                        if not np.isnan(values[var]) and not np.isinf(values[var]):
+                            if hists[var][pt_label[0]][pt_label[1]][tag_label][flavor_label] == 0:
+                                hists[var][pt_label[0]][pt_label[1]][tag_label][flavor_label] = \
+                                        Histogram(trkjet_name + '_' + var + name.split('.')[3])
+                                hists[var][pt_label[0]][pt_label[1]][tag_label][flavor_label].setup_bins\
+                                        (variables[var]['min'], variables[var]['max'], variables[var]['bin'])
+                                hists[var][pt_label[0]][pt_label[1]][tag_label][flavor_label].add_point(values[var], mc_eve_w)
 
-                        else:
-                            hists[var][pt_label[0]][pt_label[1]][tag_label][flavor_label].add_point(values[var], mc_eve_w)
+                            else:
+                                hists[var][pt_label[0]][pt_label[1]][tag_label][flavor_label].add_point(values[var], mc_eve_w)
     # Add on slice-wise weight
     for var in hists.keys():
         for mjpt in hists[var].keys():
