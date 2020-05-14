@@ -249,17 +249,6 @@ for name in os.listdir(directory):
                 nb = mychain.GetEntry(i)
                 if nb <= 0:
                     continue
-
-                '''
-                print 'trkjet_assocTrk_d0 ='
-                print mychain.trkjet_assocTrk_d0
-                print 'trkjet_assoc_d0err ='
-                print mychain.trkjet_assocTrk_d0err
-                print 'trkjet_phi ='
-                print mychain.trkjet_phi
-                print 'fat_assocTrkjet_ind ='
-                print mychain.fat_assocTrkjet_ind
-                '''
                 
                 # Get event weight
                 mc_eve_w = mychain.eve_mc_w * mychain.eve_pu_w
