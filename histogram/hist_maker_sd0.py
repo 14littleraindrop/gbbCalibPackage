@@ -178,11 +178,11 @@ def GetFlavor(fj):
         else:
             flavors.append('L')
     fj_flavor = ''.join(flavors)
-    if fj_flavor == 'BL' or 'BC':
+    if fj_flavor == 'BC':
         return 'BL'
-    elif fj_flavor == 'CL' or 'CB':
+    elif fj_flavor == 'CB':
         return 'CL'
-    elif fj_flavor == 'LL' or 'LB' or 'LC':
+    elif fj_flavor == 'LB' or fj_flavor == 'LC':
         return 'LL'
     else:
         return fj_flavor
