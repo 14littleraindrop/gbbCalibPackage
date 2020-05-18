@@ -31,6 +31,7 @@ with open(args.config[0]) as f:
 mjpt_bins = config['pt_bins']['mjet']
 nmjpt_bins = config['pt_bins']['nmjet']
 flavors = config['flavors']
+variables = config['variables']
 
 # Generate list of pt labels
 pt_labels = ['mjpt_l' + str(mjpt_bins[0]) + '_nmjpt_l' + str(nmjpt_bins[0]),\
@@ -47,8 +48,14 @@ for var in os.listdir(directory):
     os.mkdir(args.output[0] + '/' + var)
     print 'Processing variable: %s...' % (var)
     for pt_label in pt_labels:
-        print 'Processing pt region: %s...' % (pt_label)
-        for flavor in flavors:
+        print 'Plotting pt region: %s...' % (pt_label)
+
+        accum_hist_post_tag = Histogram('post_tag')
+        accum_hist_pre_tag = Histogram('pre_tag')
+        accum_hist_post_tag.setup_bins(variables[var]['min'], variables[var]['max'], variables[var]['bin'])
+        accum_hist_pre_tag.setup_bins(variables[var]['min'], variables[var]['max'], variables[var]['bin'])
+
+        for flavor in ['BB', 'BL', 'CC', 'CL', 'LL']:
             hist_tag_name = pt_label + '_2TAG' + '_' + flavor + '_' + var + '.pickle'
             hist_notag_name = pt_label + '_NOT2TAG' + '_' + flavor + '_' + var + '.pickle'
 
@@ -57,10 +64,27 @@ for var in os.listdir(directory):
             with open(os.path.join(directory, var, hist_notag_name), 'rb') as f:
                 hist_pre_tag = pickle.load(f)
             hist_pre_tag.combine(hist_post_tag)
+
+            if flavor == 'BB':
+                color = 'mediumblue'
+            elif flavor == 'BL':
+                color = 'cornflowerblue'
+            elif flavor == 'CC':
+                color = 'seagreen'
+            elif flavor == 'CL':
+                color = 'mediumspringgreen'
+            else:
+                color = 'gold'
+
             plt.figure(1)
-            plt.plot(hist_post_tag.bins(), hist_post_tag.frequencies(), '+', label = flavor)
+            plt.bar(hist_post_tag.bins(), hist_post_tag.frequencies(), width = (hist_post_tag.bins()[1] - hist_post_tag.bins()[0]), color = color, edgecolor = 'black',\
+                    linewidth = 0.5, bottom = accum_hist_post_tag.frequencies(), label = flavor)
             plt.figure(2)
-            plt.plot(hist_pre_tag.bins(), hist_pre_tag.frequencies(), '+', label = flavor)
+            plt.bar(hist_pre_tag.bins(), hist_pre_tag.frequencies(), width = (hist_pre_tag.bins()[1] - hist_pre_tag.bins()[0]), color = color, edgecolor = 'black', \
+                    linewidth = 0.5, bottom = accum_hist_pre_tag.frequencies(), label = flavor)
+
+            accum_hist_post_tag.combine(hist_post_tag)
+            accum_hist_pre_tag.combine(hist_pre_tag)
 
         plt.figure(1)
         plt.legend()

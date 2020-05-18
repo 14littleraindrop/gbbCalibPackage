@@ -13,10 +13,10 @@ class Histogram(object):
             self.data[val] = 0.0
 
     def bins(self):
-        return self.data.keys()
+        return sorted(self.data.keys())
 
     def frequencies(self):
-        return self.data.values()
+        return [self.data[key] for key in sorted(self.data.keys())]
 
     def add_point(self, value, weight=1):
         if len(self.bins()) == 0:

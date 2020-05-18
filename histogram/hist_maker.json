@@ -25,8 +25,8 @@
         "eve_HLT" : "eve_HLT_j460_a10_lcw_subjes_L1J100"
     },
     "variables":{
-        "mjmeanSd0" : {"min" : -40, "max" : 80, "bin" : 100},
-        "nmjmeanSd0" : {"min" : -40, "max" : 80, "bin" : 100}
+        "mjmeanSd0" : {"min" : -40, "max" : 80, "bin" : 50},
+        "nmjmeanSd0" : {"min" : -40, "max" : 80, "bin" : 50}
     },
     "pt_bins":{
         "mjet" : [200, 300],
