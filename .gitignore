@@ -142,3 +142,4 @@ input_files*
 sample/
 **/*.png
 hist_output*
+run/
