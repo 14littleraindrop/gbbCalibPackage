@@ -293,17 +293,17 @@ for name in os.listdir(directory):
                             else:
                                 hists[var][pt_label[0]][pt_label[1]][tag_label][flavor_label].add_point(values[var], mc_eve_w)
     # Add on slice-wise weight
-    if args.weight[0] == 'True':
-        for var in hists.keys():
-            for mjpt in hists[var].keys():
-                for nmjpt in hists[var][mjpt].keys():
-                    for tag in hists[var][mjpt][nmjpt].keys():
-                        for flavor in hists[var][mjpt][nmjpt][tag].keys():
-                            if hists[var][mjpt][nmjpt][tag][flavor] == 0:
-                                continue
-                            else:
+    for var in hists.keys():
+        for mjpt in hists[var].keys():
+            for nmjpt in hists[var][mjpt].keys():
+                for tag in hists[var][mjpt][nmjpt].keys():
+                    for flavor in hists[var][mjpt][nmjpt][tag].keys():
+                        if hists[var][mjpt][nmjpt][tag][flavor] == 0:
+                            continue
+                        else:
+                            if args.weight[0] == 'True':
                                 hists[var][mjpt][nmjpt][tag][flavor].rescale(xsec * filterEff / sum_of_w)
-                                combined_hists[var][mjpt][nmjpt][tag][flavor].combine(hists[var][mjpt][nmjpt][tag][flavor])
+                            combined_hists[var][mjpt][nmjpt][tag][flavor].combine(hists[var][mjpt][nmjpt][tag][flavor])
     print 'Histpgrams for %s has been created.' % (name)
 
 # Store combined histograms
