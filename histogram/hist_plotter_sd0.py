@@ -21,6 +21,8 @@ parser.add_argument('--dir', type=str, nargs=1,
 parser.add_argument('--config', type=str, nargs=1, help='Config file to use (JSON)', required=True)
 parser.add_argument('--output', type=str, nargs=1, help='Output directory name', required=True)
 parser.add_argument('--fit', type=str, nargs=1, help='Fitting status. Options: postfit, prefit')
+parser.add_argument('--ave', type=str, nargs=1, default=['True'], help='Default is plotting the average of each bin. \
+        Plotting regular histogram use False')
 args = parser.parse_args()
 
 directory = args.dir[0]
@@ -64,6 +66,10 @@ for var in os.listdir(directory):
             with open(os.path.join(directory, var, hist_notag_name), 'rb') as f:
                 hist_pre_tag = pickle.load(f)
             hist_pre_tag.combine(hist_post_tag)
+            
+            if args.ave[0] == 'True':
+                hist_post_tag.rescale(1 / (hist_post_tag.bins()[1] - hist_post_tag.bins()[0]))
+                hist_pre_tag.rescale(1 / (hist_pre_tag.bins()[1] - hist_pre_tag.bins()[0]))
 
             if flavor == 'BB':
                 color = 'mediumblue'
@@ -89,7 +95,11 @@ for var in os.listdir(directory):
         plt.figure(1)
         plt.legend()
         plt.xlabel(var)
-        plt.ylabel('Frequency')
+        if var == 'mjmeanSd0' or var == 'nmjmeanSd0':
+            if args.ave[0] == 'True':
+                plt.ylabel('dN/dSd0')
+        else:
+            plt.ylabel('Frequency')
         plt.ylim(0, None)
         plt.ticklabel_format(axis='y', style='sci', scilimits=(0,0))
         plt.title(var + '_' + args.fit[0] + '_posttag_' + pt_label)
@@ -99,7 +109,11 @@ for var in os.listdir(directory):
         plt.figure(2)
         plt.legend()
         plt.xlabel(var)
-        plt.ylabel('Frequency')
+        if var == 'mjmeanSd0' or var == 'nmjmeanSd0':
+            if args.ave[0] == 'True':
+                plt.ylabel('dN/dSd0')
+        else:
+            plt.ylabel('Frequency')
         plt.ylim(0, None)
         plt.ticklabel_format(axis='y', style='sci', scilimits=(0,0))
         plt.title(var + '_' + args.fit[0] + '_pretag_' + pt_label)
