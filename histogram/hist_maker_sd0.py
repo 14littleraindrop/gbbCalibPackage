@@ -19,6 +19,9 @@ parser.add_argument('--dir', type=str, nargs=1,
 parser.add_argument('-f', type=float, nargs=1, help='mixing fraction, if plotting D')
 parser.add_argument('--config', type=str, nargs=1, help='Config file to use (JSON)', default='hist_maker.json')
 parser.add_argument('--output', type=str, nargs=1, help='Name of output directory', required=True)
+parser.add_argument('--sample', type=str, nargs=1, help='Sample type: MC or Data', required=True)
+parser.add_argument('--trigger', type=str, nargs=1, default=['False'], help='Using triiger, default: False')
+parser.add_argument('--weight', type=str, nargs=1, default=['False'], help='Using weight, default: False')
 
 args = parser.parse_args()
 directory = args.dir[0]
@@ -233,8 +236,12 @@ for name in os.listdir(directory):
 
     # Get weighting info for the slice
     sum_of_w = 0
-    xsec = weight[name.split('.')[3]]['xsec']
-    filterEff = weight[name.split('.')[3]]['filterEff']
+    if args.sample[0] == 'MC':
+        xsec = weight[name.split('.')[3]]['xsec']
+        filterEff = weight[name.split('.')[3]]['filterEff']
+    else:
+        xsec = 1
+        filterEff = 1
 
     # Loop over root files in each mc slice
     with open(os.path.join(directory, name), 'r') as f:
@@ -249,6 +256,9 @@ for name in os.listdir(directory):
                 nb = mychain.GetEntry(i)
                 if nb <= 0:
                     continue
+                if args.trigger[0] == 'True':
+                    if not eveTrigger():
+                        continue
                 
                 # Get event weight
                 mc_eve_w = mychain.eve_mc_w * mychain.eve_pu_w
@@ -264,7 +274,6 @@ for name in os.listdir(directory):
                     trkjet_name = 'mjpt_' + pt_label[0] + '_nmjpt_' + pt_label[1] + '_' + tag_label + '_' + flavor_label
 
                     values = {var : 0 for var in variables.keys()}
-                    # TODO: read out variable values for each fat jet
                     for var in variables.keys():
                         if var == 'mjmeanSd0':
                             values[var] = Get_meanSd0(mj_ind)
@@ -284,16 +293,17 @@ for name in os.listdir(directory):
                             else:
                                 hists[var][pt_label[0]][pt_label[1]][tag_label][flavor_label].add_point(values[var], mc_eve_w)
     # Add on slice-wise weight
-    for var in hists.keys():
-        for mjpt in hists[var].keys():
-            for nmjpt in hists[var][mjpt].keys():
-                for tag in hists[var][mjpt][nmjpt].keys():
-                    for flavor in hists[var][mjpt][nmjpt][tag].keys():
-                        if hists[var][mjpt][nmjpt][tag][flavor] == 0:
-                            continue
-                        else:
-                            hists[var][mjpt][nmjpt][tag][flavor].rescale(xsec * filterEff / sum_of_w)
-                            combined_hists[var][mjpt][nmjpt][tag][flavor].combine(hists[var][mjpt][nmjpt][tag][flavor])
+    if args.weight[0] == 'True':
+        for var in hists.keys():
+            for mjpt in hists[var].keys():
+                for nmjpt in hists[var][mjpt].keys():
+                    for tag in hists[var][mjpt][nmjpt].keys():
+                        for flavor in hists[var][mjpt][nmjpt][tag].keys():
+                            if hists[var][mjpt][nmjpt][tag][flavor] == 0:
+                                continue
+                            else:
+                                hists[var][mjpt][nmjpt][tag][flavor].rescale(xsec * filterEff / sum_of_w)
+                                combined_hists[var][mjpt][nmjpt][tag][flavor].combine(hists[var][mjpt][nmjpt][tag][flavor])
     print 'Histpgrams for %s has been created.' % (name)
 
 # Store combined histograms
