@@ -21,7 +21,8 @@ parser.add_argument('--config', type=str, nargs=1, help='Config file to use (JSO
 parser.add_argument('--output', type=str, nargs=1, help='Name of output directory', required=True)
 parser.add_argument('--sample', type=str, nargs=1, help='Sample type: MC or Data', required=True)
 parser.add_argument('--trigger', type=str, nargs=1, default=['False'], help='Using triiger, default: False')
-parser.add_argument('--weight', type=str, nargs=1, default=['False'], help='Using weight, default: False')
+parser.add_argument('--weight', type=str, nargs=1, default=['False'], help='Using weight; if input sample type is Data, \
+        use False. default: False')
 
 args = parser.parse_args()
 directory = args.dir[0]
@@ -215,9 +216,6 @@ def Get_meanSd0(trkjet_ind):
         sd0s = sd0_sign * np.abs(d0s) / d0errs
         return np.mean(sd0s)
 
-
-
-
 # Declare combined histograms for all provided variabels
 combined_hists = {var : hist_init() for var in variables.keys()}
 for var in combined_hists.keys():
@@ -239,9 +237,6 @@ for name in os.listdir(directory):
     if args.sample[0] == 'MC':
         xsec = weight[name.split('.')[3]]['xsec']
         filterEff = weight[name.split('.')[3]]['filterEff']
-    else:
-        xsec = 1
-        filterEff = 1
 
     # Loop over root files in each mc slice
     with open(os.path.join(directory, name), 'r') as f:
@@ -261,9 +256,9 @@ for name in os.listdir(directory):
                         continue
                 
                 # Get event weight
-                mc_eve_w = mychain.eve_mc_w * mychain.eve_pu_w
+                mc_eve_w = mychain.eve_mc_w * mychain.eve_pu_w if args.sample[0] == 'MC' else 1
                 sum_of_w = sum_of_w + mc_eve_w
-
+                
                 for fj in fjFilter():
                     mj_ind = fj[0][0]
                     nmj_ind = fj[0][1]
@@ -289,10 +284,10 @@ for name in os.listdir(directory):
                                 hists[var][pt_label[0]][pt_label[1]][tag_label][flavor_label].setup_bins\
                                         (variables[var]['min'], variables[var]['max'], variables[var]['bin'])
                                 hists[var][pt_label[0]][pt_label[1]][tag_label][flavor_label].add_point(values[var], mc_eve_w)
-
                             else:
                                 hists[var][pt_label[0]][pt_label[1]][tag_label][flavor_label].add_point(values[var], mc_eve_w)
-    # Add on slice-wise weight
+
+    # Add on slice-wise weight and combine to conbined_hist
     for var in hists.keys():
         for mjpt in hists[var].keys():
             for nmjpt in hists[var][mjpt].keys():
