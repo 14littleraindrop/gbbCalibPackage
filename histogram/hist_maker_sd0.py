@@ -307,6 +307,9 @@ for var in combined_hists.keys():
         for nmjpt in combined_hists[var][mjpt].keys():
             for tag in combined_hists[var][mjpt][nmjpt].keys():
                 for flavor in combined_hists[var][mjpt][nmjpt][tag].keys():
+                    if args.sample[0] == 'Data':
+                        if not flavor == 'LL':
+                            continue
                     combined_hists[var][mjpt][nmjpt][tag][flavor].pickle(args.output[0] + '/' + var)
 print 'Combined histograms has been created.'
 print 'Done!'
