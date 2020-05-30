@@ -241,10 +241,14 @@ for name in os.listdir(directory):
     # Loop over root files in each mc slice
     with open(os.path.join(directory, name), 'r') as f:
         for line in f.readlines():
+            print 'Collecting entries from: %s' % (line)
             tfile = TFile(line.strip())
             mychain = tfile.Get('FlavourTagging_Nominal')
-            entries = mychain.GetEntriesFast()
-            print 'Collecting entries: %d entries from: %s' % (entries, line)
+            try:
+                entries = mychain.GetEntriesFast()
+            except Exception:
+                print 'input root file does not match the required data format! Input file skipped.'
+                continue
 
             # Get leaf value
             for i in range(entries):
