@@ -244,7 +244,7 @@ for name in os.listdir(directory):
             tfile = TFile(line.strip())
             mychain = tfile.Get('FlavourTagging_Nominal')
             entries = mychain.GetEntriesFast()
-            print 'Collecting entries: %d entries...' % (entries)
+            print 'Collecting entries: %d entries from: %s' % (entries, line)
 
             # Get leaf value
             for i in range(entries):
