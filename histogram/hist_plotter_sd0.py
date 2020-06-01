@@ -106,9 +106,9 @@ for var in variables.keys():
         hist_pre_tag.combine(hist_post_tag)
 
         plt.figure(1)
-        plt.plot(hist_post_tag.bins(), hist_post_tag.frequencies(), '.', color='black')
+        plt.plot(hist_post_tag.bins(), hist_post_tag.frequencies(), '.', color='black', label = 'Data')
         plt.figure(2)
-        plt.plot(hist_pre_tag.bins(), hist_pre_tag.frequencies(), '.', color='black')
+        plt.plot(hist_pre_tag.bins(), hist_pre_tag.frequencies(), '.', color='black', label = 'Data')
 
 
 
