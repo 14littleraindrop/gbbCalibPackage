@@ -16,7 +16,6 @@ parser = argparse.ArgumentParser(description='Make histogram of a variable given
         text files containing ROOT file pathes of all five MC slices.')
 parser.add_argument('--dir', type=str, nargs=1,
         help='Directory of text files containing paths of ROOT files to process', required=True)
-parser.add_argument('-f', type=float, nargs=1, help='mixing fraction, if plotting D')
 parser.add_argument('--config', type=str, nargs=1, help='Config file to use (JSON)', default='hist_maker.json')
 parser.add_argument('--output', type=str, nargs=1, help='Name of output directory', required=True)
 parser.add_argument('--sample', type=str, nargs=1, help='Sample type: MC or Data', required=True)
@@ -233,7 +232,7 @@ for name in os.listdir(directory):
     hists = {var : hist_init() for var in variables.keys()}
 
     # Get weighting info for the slice
-    sum_of_w = 0
+    sum_of_init_eve = 0
     if args.sample[0] == 'MC':
         xsec = weight[name.split('.')[3]]['xsec']
         filterEff = weight[name.split('.')[3]]['filterEff']
@@ -244,6 +243,9 @@ for name in os.listdir(directory):
             print 'Collecting entries from: %s' % (line)
             tfile = TFile(line.strip())
             mychain = tfile.Get('FlavourTagging_Nominal')
+            hyield = tfile.Get('MetaData_EventCount')
+            hyield.SetDirectory(0)
+            sum_of_init_eve =+ hyield.GetBinContent(1)
             try:
                 entries = mychain.GetEntriesFast()
             except Exception:
@@ -261,8 +263,7 @@ for name in os.listdir(directory):
                 
                 # Get event weight
                 mc_eve_w = mychain.eve_mc_w * mychain.eve_pu_w if args.sample[0] == 'MC' else 1
-                sum_of_w = sum_of_w + mc_eve_w
-                
+
                 for fj in fjFilter():
                     mj_ind = fj[0][0]
                     nmj_ind = fj[0][1]
@@ -301,7 +302,7 @@ for name in os.listdir(directory):
                             continue
                         else:
                             if args.weight[0] == 'True':
-                                hists[var][mjpt][nmjpt][tag][flavor].rescale(xsec * filterEff / sum_of_w)
+                                hists[var][mjpt][nmjpt][tag][flavor].rescale(xsec * filterEff / sum_of_init_eve)
                             combined_hists[var][mjpt][nmjpt][tag][flavor].combine(hists[var][mjpt][nmjpt][tag][flavor])
     print 'Histpgrams for %s has been created.' % (name)
 
